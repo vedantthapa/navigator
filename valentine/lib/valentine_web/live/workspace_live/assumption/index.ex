@@ -87,8 +87,8 @@ defmodule ValentineWeb.WorkspaceLive.Assumption.Index do
   end
 
   @impl true
-  def handle_info(%{topic: "workspace_" <> workspace_id}, socket) do
-    workspace = get_workspace(workspace_id)
+  def handle_info(%{topic: "workspace_" <> _workspace_id}, socket) do
+    workspace = get_workspace(socket.assigns.workspace_id)
 
     {:noreply,
      socket

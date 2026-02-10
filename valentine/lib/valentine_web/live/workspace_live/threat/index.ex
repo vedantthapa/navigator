@@ -120,12 +120,12 @@ defmodule ValentineWeb.WorkspaceLive.Threat.Index do
   end
 
   @impl true
-  def handle_info(%{topic: "workspace_" <> workspace_id}, socket) do
+  def handle_info(%{topic: "workspace_" <> _workspace_id}, socket) do
     {:noreply,
      assign(
        socket,
        :threats,
-       Composer.list_threats_by_workspace(workspace_id, socket.assigns.filters)
+       Composer.list_threats_by_workspace(socket.assigns.workspace_id, socket.assigns.filters)
      )}
   end
 end
