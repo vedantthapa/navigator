@@ -202,15 +202,20 @@ defmodule ValentineWeb.WorkspaceLive.Components.MitigationComponent do
     if tag not in current_tags do
       updated_tags = current_tags ++ [tag]
 
-      {:ok, mitigation} =
-        Composer.update_mitigation(socket.assigns.mitigation, %{tags: updated_tags})
+      case Composer.update_mitigation(socket.assigns.mitigation, %{tags: updated_tags}) do
+        {:ok, mitigation} ->
+          broadcast_change(mitigation.workspace_id)
 
-      broadcast_change(mitigation.workspace_id)
+          {:noreply,
+           socket
+           |> assign(:tag, "")
+           |> assign(:mitigation, %{socket.assigns.mitigation | tags: updated_tags})}
 
-      {:noreply,
-       socket
-       |> assign(:tag, "")
-       |> assign(:mitigation, %{socket.assigns.mitigation | tags: updated_tags})}
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, gettext("Failed to add tag"))}
+      end
     else
       {:noreply, socket}
     end
@@ -222,27 +227,33 @@ defmodule ValentineWeb.WorkspaceLive.Components.MitigationComponent do
   def handle_event("remove_tag", %{"tag" => tag}, socket) do
     updated_tags = List.delete(socket.assigns.mitigation.tags, tag)
 
-    {:ok, mitigation} =
-      Composer.update_mitigation(socket.assigns.mitigation, %{tags: updated_tags})
+    case Composer.update_mitigation(socket.assigns.mitigation, %{tags: updated_tags}) do
+      {:ok, mitigation} ->
+        broadcast_change(mitigation.workspace_id)
+        {:noreply, assign(socket, :mitigation, %{socket.assigns.mitigation | tags: updated_tags})}
 
-    broadcast_change(mitigation.workspace_id)
-    {:noreply, assign(socket, :mitigation, %{socket.assigns.mitigation | tags: updated_tags})}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, gettext("Failed to remove tag"))}
+    end
   end
 
   @impl true
   def handle_event("save_comments", %{"comments" => comments}, socket) do
     # Forces a changeset change
-    {:ok, mitigation} =
-      Composer.update_mitigation(Map.put(socket.assigns.mitigation, :comments, nil), %{
-        :comments => comments
-      })
+    case Composer.update_mitigation(Map.put(socket.assigns.mitigation, :comments, nil), %{
+           :comments => comments
+         }) do
+      {:ok, mitigation} ->
+        broadcast_change(mitigation.workspace_id)
 
-    broadcast_change(mitigation.workspace_id)
+        {:noreply,
+         socket
+         |> assign(:summary_state, nil)
+         |> assign(:mitigation, %{socket.assigns.mitigation | comments: comments})}
 
-    {:noreply,
-     socket
-     |> assign(:summary_state, nil)
-     |> assign(:mitigation, %{socket.assigns.mitigation | comments: comments})}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, gettext("Failed to save comments"))}
+    end
   end
 
   @impl true

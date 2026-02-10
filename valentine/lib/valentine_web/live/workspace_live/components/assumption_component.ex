@@ -188,15 +188,20 @@ defmodule ValentineWeb.WorkspaceLive.Components.AssumptionComponent do
     if tag not in current_tags do
       updated_tags = current_tags ++ [tag]
 
-      {:ok, assumption} =
-        Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags})
+      case Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags}) do
+        {:ok, assumption} ->
+          broadcast_change(assumption.workspace_id)
 
-      broadcast_change(assumption.workspace_id)
+          {:noreply,
+           socket
+           |> assign(:tag, "")
+           |> assign(:assumption, %{socket.assigns.assumption | tags: updated_tags})}
 
-      {:noreply,
-       socket
-       |> assign(:tag, "")
-       |> assign(:assumption, %{socket.assigns.assumption | tags: updated_tags})}
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, gettext("Failed to add tag"))}
+      end
     else
       {:noreply, socket}
     end
@@ -208,27 +213,33 @@ defmodule ValentineWeb.WorkspaceLive.Components.AssumptionComponent do
   def handle_event("remove_tag", %{"tag" => tag}, socket) do
     updated_tags = List.delete(socket.assigns.assumption.tags, tag)
 
-    {:ok, assumption} =
-      Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags})
+    case Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags}) do
+      {:ok, assumption} ->
+        broadcast_change(assumption.workspace_id)
+        {:noreply, assign(socket, :assumption, %{socket.assigns.assumption | tags: updated_tags})}
 
-    broadcast_change(assumption.workspace_id)
-    {:noreply, assign(socket, :assumption, %{socket.assigns.assumption | tags: updated_tags})}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, gettext("Failed to remove tag"))}
+    end
   end
 
   @impl true
   def handle_event("save_comments", %{"comments" => comments}, socket) do
     # Forces a changeset change
-    {:ok, assumption} =
-      Composer.update_assumption(Map.put(socket.assigns.assumption, :comments, nil), %{
-        :comments => comments
-      })
+    case Composer.update_assumption(Map.put(socket.assigns.assumption, :comments, nil), %{
+           :comments => comments
+         }) do
+      {:ok, assumption} ->
+        broadcast_change(assumption.workspace_id)
 
-    broadcast_change(assumption.workspace_id)
+        {:noreply,
+         socket
+         |> assign(:summary_state, nil)
+         |> assign(:assumption, %{socket.assigns.assumption | comments: comments})}
 
-    {:noreply,
-     socket
-     |> assign(:summary_state, nil)
-     |> assign(:assumption, %{socket.assigns.assumption | comments: comments})}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, gettext("Failed to save comments"))}
+    end
   end
 
   @impl true

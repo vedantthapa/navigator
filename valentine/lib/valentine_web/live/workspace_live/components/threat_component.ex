@@ -200,13 +200,20 @@ defmodule ValentineWeb.WorkspaceLive.Components.ThreatComponent do
     if tag not in current_tags do
       updated_tags = current_tags ++ [tag]
 
-      {:ok, threat} = Composer.update_threat(socket.assigns.threat, %{tags: updated_tags})
-      broadcast_change(threat.workspace_id)
+      case Composer.update_threat(socket.assigns.threat, %{tags: updated_tags}) do
+        {:ok, threat} ->
+          broadcast_change(threat.workspace_id)
 
-      {:noreply,
-       socket
-       |> assign(:tag, "")
-       |> assign(:threat, %{socket.assigns.threat | tags: updated_tags})}
+          {:noreply,
+           socket
+           |> assign(:tag, "")
+           |> assign(:threat, %{socket.assigns.threat | tags: updated_tags})}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, gettext("Failed to add tag"))}
+      end
     else
       {:noreply, socket}
     end
@@ -217,25 +224,34 @@ defmodule ValentineWeb.WorkspaceLive.Components.ThreatComponent do
   @impl true
   def handle_event("remove_tag", %{"tag" => tag}, socket) do
     updated_tags = List.delete(socket.assigns.threat.tags, tag)
-    {:ok, threat} = Composer.update_threat(socket.assigns.threat, %{tags: updated_tags})
-    broadcast_change(threat.workspace_id)
-    {:noreply, assign(socket, :threat, %{socket.assigns.threat | tags: updated_tags})}
+
+    case Composer.update_threat(socket.assigns.threat, %{tags: updated_tags}) do
+      {:ok, threat} ->
+        broadcast_change(threat.workspace_id)
+        {:noreply, assign(socket, :threat, %{socket.assigns.threat | tags: updated_tags})}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, gettext("Failed to remove tag"))}
+    end
   end
 
   @impl true
   def handle_event("save_comments", %{"comments" => comments}, socket) do
     # Forces a changeset change
-    {:ok, threat} =
-      Composer.update_threat(Map.put(socket.assigns.threat, :comments, nil), %{
-        :comments => comments
-      })
+    case Composer.update_threat(Map.put(socket.assigns.threat, :comments, nil), %{
+           :comments => comments
+         }) do
+      {:ok, threat} ->
+        broadcast_change(threat.workspace_id)
 
-    broadcast_change(threat.workspace_id)
+        {:noreply,
+         socket
+         |> assign(:summary_state, nil)
+         |> assign(:threat, %{socket.assigns.threat | comments: comments})}
 
-    {:noreply,
-     socket
-     |> assign(:summary_state, nil)
-     |> assign(:threat, %{socket.assigns.threat | comments: comments})}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, gettext("Failed to save comments"))}
+    end
   end
 
   @impl true
