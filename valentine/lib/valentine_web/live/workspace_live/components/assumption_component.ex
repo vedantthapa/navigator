@@ -188,7 +188,10 @@ defmodule ValentineWeb.WorkspaceLive.Components.AssumptionComponent do
     if tag not in current_tags do
       updated_tags = current_tags ++ [tag]
 
-      Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags})
+      {:ok, assumption} =
+        Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags})
+
+      broadcast_change(assumption.workspace_id)
 
       {:noreply,
        socket
@@ -204,16 +207,23 @@ defmodule ValentineWeb.WorkspaceLive.Components.AssumptionComponent do
   @impl true
   def handle_event("remove_tag", %{"tag" => tag}, socket) do
     updated_tags = List.delete(socket.assigns.assumption.tags, tag)
-    Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags})
+
+    {:ok, assumption} =
+      Composer.update_assumption(socket.assigns.assumption, %{tags: updated_tags})
+
+    broadcast_change(assumption.workspace_id)
     {:noreply, assign(socket, :assumption, %{socket.assigns.assumption | tags: updated_tags})}
   end
 
   @impl true
   def handle_event("save_comments", %{"comments" => comments}, socket) do
     # Forces a changeset change
-    Composer.update_assumption(Map.put(socket.assigns.assumption, :comments, nil), %{
-      :comments => comments
-    })
+    {:ok, assumption} =
+      Composer.update_assumption(Map.put(socket.assigns.assumption, :comments, nil), %{
+        :comments => comments
+      })
+
+    broadcast_change(assumption.workspace_id)
 
     {:noreply,
      socket
@@ -237,4 +247,12 @@ defmodule ValentineWeb.WorkspaceLive.Components.AssumptionComponent do
 
   defp assoc_length(l) when is_list(l), do: length(l)
   defp assoc_length(_), do: 0
+
+  defp broadcast_change(workspace_id) do
+    ValentineWeb.Endpoint.broadcast(
+      "workspace_" <> workspace_id,
+      "assumption_updated",
+      %{}
+    )
+  end
 end

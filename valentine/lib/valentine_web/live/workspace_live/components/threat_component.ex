@@ -200,7 +200,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ThreatComponent do
     if tag not in current_tags do
       updated_tags = current_tags ++ [tag]
 
-      Composer.update_threat(socket.assigns.threat, %{tags: updated_tags})
+      {:ok, threat} = Composer.update_threat(socket.assigns.threat, %{tags: updated_tags})
+      broadcast_change(threat.workspace_id)
 
       {:noreply,
        socket
@@ -216,16 +217,20 @@ defmodule ValentineWeb.WorkspaceLive.Components.ThreatComponent do
   @impl true
   def handle_event("remove_tag", %{"tag" => tag}, socket) do
     updated_tags = List.delete(socket.assigns.threat.tags, tag)
-    Composer.update_threat(socket.assigns.threat, %{tags: updated_tags})
+    {:ok, threat} = Composer.update_threat(socket.assigns.threat, %{tags: updated_tags})
+    broadcast_change(threat.workspace_id)
     {:noreply, assign(socket, :threat, %{socket.assigns.threat | tags: updated_tags})}
   end
 
   @impl true
   def handle_event("save_comments", %{"comments" => comments}, socket) do
     # Forces a changeset change
-    Composer.update_threat(Map.put(socket.assigns.threat, :comments, nil), %{
-      :comments => comments
-    })
+    {:ok, threat} =
+      Composer.update_threat(Map.put(socket.assigns.threat, :comments, nil), %{
+        :comments => comments
+      })
+
+    broadcast_change(threat.workspace_id)
 
     {:noreply,
      socket
@@ -249,4 +254,12 @@ defmodule ValentineWeb.WorkspaceLive.Components.ThreatComponent do
 
   defp assoc_length(l) when is_list(l), do: length(l)
   defp assoc_length(_), do: 0
+
+  defp broadcast_change(workspace_id) do
+    ValentineWeb.Endpoint.broadcast(
+      "workspace_" <> workspace_id,
+      "threat_updated",
+      %{}
+    )
+  end
 end
