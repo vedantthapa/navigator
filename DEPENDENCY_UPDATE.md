@@ -25,10 +25,15 @@ The `mix.exs` file has been updated with new version constraints to allow upgrad
 
 ## How to Complete the Update
 
-Run the following commands in an environment with proper network connectivity:
+### Option 1: Manual Command-Line Update (Recommended)
+
+Run the following commands in an environment with proper network connectivity (local development machine or CI):
 
 ```bash
 cd valentine
+
+# First, unlock the dependencies that need version updates
+mix deps.unlock dns_cluster phoenix phoenix_live_view usage_rules
 
 # Update all dependencies to their latest allowed versions
 mix deps.update --all
@@ -43,8 +48,19 @@ mix compile --warnings-as-errors
 mix format
 
 # Run tests to ensure everything still works
-mix test
+MIX_ENV=test mix test
 ```
+
+### Option 2: Use the Helper Script
+
+```bash
+# From the repository root
+./scripts/update-elixir-deps.sh
+```
+
+### Option 3: Trigger GitHub Actions Workflow
+
+The GitHub Actions workflow at `.github/workflows/update-deps.yml` can be manually triggered to automatically perform the update and create a pull request with the changes.
 
 ## Expected Dependency Updates
 
