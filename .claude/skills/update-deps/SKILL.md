@@ -1,3 +1,8 @@
+---
+name: update-deps
+description: Update outdated Elixir dependencies
+---
+
 # Update Elixir Dependencies
 
 Update all outdated dependencies in this Elixir project, handling both safe updates and breaking changes.
