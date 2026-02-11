@@ -94,12 +94,13 @@ defmodule ValentineWeb.WorkspaceLive.Mitigation.Components.ControlCategorizer do
       |> Enum.filter(fn {_, v} -> v == "true" end)
       |> Enum.map(fn {k, _} -> k end)
 
-    Valentine.Composer.update_mitigation(
-      socket.assigns.mitigation,
-      %{tags: (socket.assigns.mitigation.tags || []) ++ tags}
-    )
+    {:ok, updated_mitigation} =
+      Valentine.Composer.update_mitigation(
+        socket.assigns.mitigation,
+        %{tags: (socket.assigns.mitigation.tags || []) ++ tags}
+      )
 
-    notify_parent({:saved, socket.assigns.mitigation})
+    notify_parent({:saved, updated_mitigation})
 
     {:noreply,
      socket
