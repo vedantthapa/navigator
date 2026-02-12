@@ -26,6 +26,7 @@ defmodule Valentine.Composer do
   alias Valentine.Composer.EvidenceAssumption
   alias Valentine.Composer.EvidenceThreat
   alias Valentine.Composer.EvidenceMitigation
+  alias Valentine.Composer.Conversation
 
   @doc """
   Returns the list of workspaces.
@@ -2452,5 +2453,47 @@ defmodule Valentine.Composer do
         status: item.status
       })
     )
+  end
+
+  # Conversation functions
+
+  @doc """
+  Gets or creates a conversation for a workspace and user.
+
+  ## Examples
+
+      iex> get_or_create_conversation(workspace_id, user_email)
+      %Conversation{}
+
+  """
+  def get_or_create_conversation(workspace_id, user_email) do
+    case Repo.get_by(Conversation, workspace_id: workspace_id, user_email: user_email) do
+      nil ->
+        %Conversation{}
+        |> Conversation.changeset(%{
+          workspace_id: workspace_id,
+          user_email: user_email,
+          messages: []
+        })
+        |> Repo.insert!()
+
+      conversation ->
+        conversation
+    end
+  end
+
+  @doc """
+  Updates a conversation's messages.
+
+  ## Examples
+
+      iex> update_conversation_messages(conversation, messages)
+      {:ok, %Conversation{}}
+
+  """
+  def update_conversation_messages(%Conversation{} = conversation, messages) do
+    conversation
+    |> Conversation.changeset(%{messages: messages})
+    |> Repo.update()
   end
 end

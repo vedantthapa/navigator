@@ -4,6 +4,7 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
 
   alias Valentine.Prompts.PromptRegistry
   alias Phoenix.LiveView.AsyncResult
+  alias Valentine.Composer
 
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatOpenAI
@@ -91,7 +92,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
       socket.assigns.chain
       |> LLMChain.apply_delta(data)
 
-    Valentine.Cache.put({socket.id, :chatbot_history}, chain, expire: :timer.hours(24))
+    # Save to database instead of cache
+    save_conversation_to_db(socket, chain)
 
     {:ok,
      socket
@@ -119,7 +121,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
   end
 
   def update(assigns, socket) do
-    cached_chain = Valentine.Cache.get({socket.id, :chatbot_history}) || %LLMChain{}
+    # Load conversation from database instead of cache
+    messages = load_conversation_from_db(assigns.workspace_id, assigns.current_user)
 
     {:ok,
      socket
@@ -137,7 +140,7 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
          callbacks: [llm_handler(self(), socket.assigns.myself)],
          cid: socket.assigns.myself
        })
-       |> LLMChain.add_messages(cached_chain.messages)
+       |> LLMChain.add_messages(messages)
      )
      |> assign(assigns)}
   end
@@ -169,7 +172,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
         cid: socket.assigns.myself
       })
 
-    Valentine.Cache.put({socket.id, :chatbot_history}, chain, expire: :timer.hours(24))
+    # Clear conversation in database
+    save_conversation_to_db(socket, chain)
 
     {:noreply,
      socket
@@ -189,7 +193,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
         Message.new_user!(value)
       ])
 
-    Valentine.Cache.put({socket.id, :chatbot_history}, chain, expire: :timer.hours(24))
+    # Save to database instead of cache
+    save_conversation_to_db(socket, chain)
 
     {:noreply,
      socket
@@ -333,4 +338,37 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
   defp role(:assistant), do: "AI Assistant"
   defp role(:user), do: "You"
   defp role(role), do: role
+
+  # Helper functions for database persistence
+
+  defp load_conversation_from_db(workspace_id, user_email) do
+    conversation = Composer.get_or_create_conversation(workspace_id, user_email)
+
+    # Convert stored message maps back to LangChain Message structs
+    Enum.map(conversation.messages, fn msg ->
+      role = String.to_existing_atom(msg["role"])
+
+      case role do
+        :system -> Message.new_system!(msg["content"])
+        :user -> Message.new_user!(msg["content"])
+        :assistant -> Message.new_assistant!(msg["content"])
+      end
+    end)
+  end
+
+  defp save_conversation_to_db(socket, chain) do
+    %{workspace_id: workspace_id, current_user: user_email} = socket.assigns
+
+    # Convert LangChain messages to serializable maps
+    messages =
+      Enum.map(chain.messages, fn msg ->
+        %{
+          "role" => Atom.to_string(msg.role),
+          "content" => msg.content
+        }
+      end)
+
+    conversation = Composer.get_or_create_conversation(workspace_id, user_email)
+    Composer.update_conversation_messages(conversation, messages)
+  end
 end
