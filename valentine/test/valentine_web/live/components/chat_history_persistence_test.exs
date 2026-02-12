@@ -85,5 +85,57 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatHistoryPersistenceTest do
       assert retrieved != nil
       assert length(retrieved.messages) == 0
     end
+
+    test "handles nil user_id gracefully" do
+      # Should not share state between nil and valid user_id
+      chain = %{
+        messages: [Message.new_user!("Test message")]
+      }
+
+      # Store with nil user_id
+      cache_key_nil_user = {nil, @workspace_id, :chatbot_history}
+      Valentine.Cache.put(cache_key_nil_user, chain, expire: :timer.hours(24))
+
+      # Store with valid user_id
+      valid_cache_key = {@user_id, @workspace_id, :chatbot_history}
+      valid_chain = %{messages: []}
+      Valentine.Cache.put(valid_cache_key, valid_chain, expire: :timer.hours(24))
+
+      # Verify they are separate - nil key should still have messages
+      nil_retrieved = Valentine.Cache.get(cache_key_nil_user)
+      assert nil_retrieved != nil
+      assert length(nil_retrieved.messages) == 1
+
+      # Valid key should have empty messages
+      valid_retrieved = Valentine.Cache.get(valid_cache_key)
+      assert valid_retrieved != nil
+      assert length(valid_retrieved.messages) == 0
+    end
+
+    test "handles nil workspace_id gracefully" do
+      # Should not share state between nil and valid workspace_id
+      chain = %{
+        messages: [Message.new_user!("Test message")]
+      }
+
+      # Store with nil workspace_id
+      cache_key_nil_workspace = {@user_id, nil, :chatbot_history}
+      Valentine.Cache.put(cache_key_nil_workspace, chain, expire: :timer.hours(24))
+
+      # Store with valid workspace_id
+      valid_cache_key = {@user_id, @workspace_id, :chatbot_history}
+      valid_chain = %{messages: []}
+      Valentine.Cache.put(valid_cache_key, valid_chain, expire: :timer.hours(24))
+
+      # Verify they are separate - nil key should still have messages
+      nil_retrieved = Valentine.Cache.get(cache_key_nil_workspace)
+      assert nil_retrieved != nil
+      assert length(nil_retrieved.messages) == 1
+
+      # Valid key should have empty messages
+      valid_retrieved = Valentine.Cache.get(valid_cache_key)
+      assert valid_retrieved != nil
+      assert length(valid_retrieved.messages) == 0
+    end
   end
 end

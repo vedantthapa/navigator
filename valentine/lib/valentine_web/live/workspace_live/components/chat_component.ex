@@ -92,7 +92,10 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
       |> LLMChain.apply_delta(data)
 
     cache_key = build_cache_key(socket.assigns.current_user, socket.assigns.workspace_id)
-    Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
+
+    if cache_key do
+      Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
+    end
 
     {:ok,
      socket
@@ -121,7 +124,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
 
   def update(assigns, socket) do
     cache_key = build_cache_key(assigns[:current_user], assigns[:workspace_id])
-    cached_chain = Valentine.Cache.get(cache_key) || %LLMChain{}
+    cached_chain = if cache_key, do: Valentine.Cache.get(cache_key), else: nil
+    cached_chain = cached_chain || %LLMChain{}
 
     {:ok,
      socket
@@ -172,7 +176,10 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
       })
 
     cache_key = build_cache_key(socket.assigns.current_user, socket.assigns.workspace_id)
-    Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
+
+    if cache_key do
+      Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
+    end
 
     {:noreply,
      socket
@@ -193,7 +200,10 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
       ])
 
     cache_key = build_cache_key(socket.assigns.current_user, socket.assigns.workspace_id)
-    Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
+
+    if cache_key do
+      Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
+    end
 
     {:noreply,
      socket
@@ -338,7 +348,13 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
   defp role(:user), do: "You"
   defp role(role), do: role
 
-  defp build_cache_key(user_id, workspace_id) do
+  defp build_cache_key(user_id, workspace_id)
+       when is_binary(user_id) and is_binary(workspace_id) do
     {user_id, workspace_id, :chatbot_history}
+  end
+
+  defp build_cache_key(_user_id, _workspace_id) do
+    # Return nil for invalid keys to prevent shared state
+    nil
   end
 end
