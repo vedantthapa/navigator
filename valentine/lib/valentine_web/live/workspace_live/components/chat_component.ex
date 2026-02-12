@@ -91,7 +91,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
       socket.assigns.chain
       |> LLMChain.apply_delta(data)
 
-    Valentine.Cache.put({socket.id, :chatbot_history}, chain, expire: :timer.hours(24))
+    cache_key = build_cache_key(socket.assigns.current_user, socket.assigns.workspace_id)
+    Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
 
     {:ok,
      socket
@@ -119,7 +120,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
   end
 
   def update(assigns, socket) do
-    cached_chain = Valentine.Cache.get({socket.id, :chatbot_history}) || %LLMChain{}
+    cache_key = build_cache_key(assigns[:current_user], assigns[:workspace_id])
+    cached_chain = Valentine.Cache.get(cache_key) || %LLMChain{}
 
     {:ok,
      socket
@@ -169,7 +171,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
         cid: socket.assigns.myself
       })
 
-    Valentine.Cache.put({socket.id, :chatbot_history}, chain, expire: :timer.hours(24))
+    cache_key = build_cache_key(socket.assigns.current_user, socket.assigns.workspace_id)
+    Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
 
     {:noreply,
      socket
@@ -189,7 +192,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
         Message.new_user!(value)
       ])
 
-    Valentine.Cache.put({socket.id, :chatbot_history}, chain, expire: :timer.hours(24))
+    cache_key = build_cache_key(socket.assigns.current_user, socket.assigns.workspace_id)
+    Valentine.Cache.put(cache_key, chain, expire: :timer.hours(24))
 
     {:noreply,
      socket
@@ -333,4 +337,8 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponent do
   defp role(:assistant), do: "AI Assistant"
   defp role(:user), do: "You"
   defp role(role), do: role
+
+  defp build_cache_key(user_id, workspace_id) do
+    {user_id, workspace_id, :chatbot_history}
+  end
 end
