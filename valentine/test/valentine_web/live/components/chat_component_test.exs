@@ -168,41 +168,7 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
       assert updated_socket.assigns.some_key == "some_value"
     end
 
-    test "restores chat history from previous session", %{socket: socket} do
-      socket = Map.put(socket, :assigns, Map.put(socket.assigns, :myself, "myself"))
-      %{workspace_id: workspace_id, current_user: user_id} = socket.assigns
-
-      # Submit a message in first session
-      {:noreply, first_session_socket} =
-        ChatComponent.handle_event("chat_submit", %{"value" => "Test message"}, socket)
-
-      assert length(first_session_socket.assigns.chain.messages) == 2
-      assert hd(tl(first_session_socket.assigns.chain.messages)).content == "Test message"
-
-      # Simulate new socket session (component remount)
-      new_socket = %Phoenix.LiveView.Socket{
-        assigns: Map.merge(socket.assigns, %{myself: "myself"})
-      }
-
-      assigns = %{
-        active_module: "some_active_module",
-        active_action: "some_active_action",
-        workspace_id: workspace_id,
-        current_user: user_id
-      }
-
-      # Update should restore history
-      {:ok, restored_socket} = ChatComponent.update(assigns, new_socket)
-
-      assert length(restored_socket.assigns.chain.messages) == 2
-      assert hd(tl(restored_socket.assigns.chain.messages)).content == "Test message"
-
-      # Cleanup
-      Valentine.Cache.delete({workspace_id, user_id, :chatbot_history})
-    end
-
-    test "restores different chat histories for different user and workspace combinations",
-         %{socket: socket} do
+    test "restores chat history per user and workspace across sessions", %{socket: socket} do
       workspace1 = workspace_fixture()
       workspace2 = workspace_fixture()
       user1 = "user1@example.com"
