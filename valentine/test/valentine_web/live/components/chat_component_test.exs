@@ -167,6 +167,130 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
       {:ok, updated_socket} = ChatComponent.update(assigns, socket)
       assert updated_socket.assigns.some_key == "some_value"
     end
+
+    test "restores chat history from previous session", %{socket: socket} do
+      socket = Map.put(socket, :assigns, Map.put(socket.assigns, :myself, "myself"))
+      %{workspace_id: workspace_id, current_user: user_id} = socket.assigns
+
+      # Submit a message in first session
+      {:noreply, first_session_socket} =
+        ChatComponent.handle_event("chat_submit", %{"value" => "Test message"}, socket)
+
+      assert length(first_session_socket.assigns.chain.messages) == 2
+      assert hd(tl(first_session_socket.assigns.chain.messages)).content == "Test message"
+
+      # Simulate new socket session (component remount)
+      new_socket = %Phoenix.LiveView.Socket{
+        assigns: Map.merge(socket.assigns, %{myself: "myself"})
+      }
+
+      assigns = %{
+        active_module: "some_active_module",
+        active_action: "some_active_action",
+        workspace_id: workspace_id,
+        current_user: user_id
+      }
+
+      # Update should restore history
+      {:ok, restored_socket} = ChatComponent.update(assigns, new_socket)
+
+      assert length(restored_socket.assigns.chain.messages) == 2
+      assert hd(tl(restored_socket.assigns.chain.messages)).content == "Test message"
+
+      # Cleanup
+      Valentine.Cache.delete({workspace_id, user_id, :chatbot_history})
+    end
+
+    test "restores different chat histories for different user and workspace combinations",
+         %{socket: socket} do
+      workspace1 = workspace_fixture()
+      workspace2 = workspace_fixture()
+      user1 = "user1@example.com"
+      user2 = "user2@example.com"
+
+      create_socket = fn workspace_id, user_id ->
+        Map.put(
+          socket,
+          :assigns,
+          Map.merge(socket.assigns, %{
+            workspace_id: workspace_id,
+            current_user: user_id,
+            myself: "myself"
+          })
+        )
+      end
+
+      # Submit messages in three different contexts
+      socket1 = create_socket.(workspace1.id, user1)
+
+      {:noreply, _} =
+        ChatComponent.handle_event(
+          "chat_submit",
+          %{"value" => "User1 Workspace1 message"},
+          socket1
+        )
+
+      socket2 = create_socket.(workspace1.id, user2)
+
+      {:noreply, _} =
+        ChatComponent.handle_event(
+          "chat_submit",
+          %{"value" => "User2 Workspace1 message"},
+          socket2
+        )
+
+      socket3 = create_socket.(workspace2.id, user1)
+
+      {:noreply, _} =
+        ChatComponent.handle_event(
+          "chat_submit",
+          %{"value" => "User1 Workspace2 message"},
+          socket3
+        )
+
+      # Verify each context restores its own history
+      {:ok, restored_socket1} =
+        ChatComponent.update(
+          %{
+            active_module: "some_module",
+            active_action: "some_action",
+            workspace_id: workspace1.id,
+            current_user: user1
+          },
+          %Phoenix.LiveView.Socket{assigns: Map.merge(socket.assigns, %{myself: "myself"})}
+        )
+
+      {:ok, restored_socket2} =
+        ChatComponent.update(
+          %{
+            active_module: "some_module",
+            active_action: "some_action",
+            workspace_id: workspace1.id,
+            current_user: user2
+          },
+          %Phoenix.LiveView.Socket{assigns: Map.merge(socket.assigns, %{myself: "myself"})}
+        )
+
+      {:ok, restored_socket3} =
+        ChatComponent.update(
+          %{
+            active_module: "some_module",
+            active_action: "some_action",
+            workspace_id: workspace2.id,
+            current_user: user1
+          },
+          %Phoenix.LiveView.Socket{assigns: Map.merge(socket.assigns, %{myself: "myself"})}
+        )
+
+      assert hd(tl(restored_socket1.assigns.chain.messages)).content == "User1 Workspace1 message"
+      assert hd(tl(restored_socket2.assigns.chain.messages)).content == "User2 Workspace1 message"
+      assert hd(tl(restored_socket3.assigns.chain.messages)).content == "User1 Workspace2 message"
+
+      # Cleanup
+      Valentine.Cache.delete({workspace1.id, user1, :chatbot_history})
+      Valentine.Cache.delete({workspace1.id, user2, :chatbot_history})
+      Valentine.Cache.delete({workspace2.id, user1, :chatbot_history})
+    end
   end
 
   describe "handle_async/3" do
@@ -279,142 +403,6 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
     test "runs the chain", %{socket: socket} do
       updated_socket = ChatComponent.run_chain(socket)
       assert updated_socket.assigns.chain != nil
-    end
-  end
-
-  describe "chat history persistence" do
-    setup [:create_component]
-
-    test "chat history persists across socket sessions", %{socket: socket} do
-      # Setup: Add myself to socket for handle_event
-      socket = Map.put(socket, :assigns, Map.put(socket.assigns, :myself, "myself"))
-
-      # Simulate a user submitting a message
-      {:noreply, updated_socket} =
-        ChatComponent.handle_event("chat_submit", %{"value" => "Test message"}, socket)
-
-      # Verify message was added to the chain
-      assert length(updated_socket.assigns.chain.messages) == 2
-      assert hd(tl(updated_socket.assigns.chain.messages)).content == "Test message"
-
-      # Extract workspace and user for cache key
-      %{workspace_id: workspace_id, current_user: user_id} = socket.assigns
-
-      # Verify message was cached
-      cached_messages = Valentine.Cache.get({workspace_id, user_id, :chatbot_history})
-      assert cached_messages != nil
-      assert length(cached_messages) == 2
-
-      # Simulate a new socket session (update/2 is called when component remounts)
-      assigns = %{
-        active_module: "some_active_module",
-        active_action: "some_active_action",
-        workspace_id: workspace_id,
-        current_user: user_id
-      }
-
-      new_socket = %Phoenix.LiveView.Socket{
-        assigns: Map.merge(socket.assigns, %{myself: "myself"})
-      }
-
-      # Update with cached history
-      {:ok, restored_socket} = ChatComponent.update(assigns, new_socket)
-
-      # Verify history was restored from cache
-      assert length(restored_socket.assigns.chain.messages) == 2
-      assert hd(tl(restored_socket.assigns.chain.messages)).content == "Test message"
-
-      # Cleanup
-      Valentine.Cache.delete({workspace_id, user_id, :chatbot_history})
-    end
-
-    test "chat history is isolated per user and workspace combination", %{socket: socket} do
-      # Setup: Create two different workspace/user combinations
-      workspace1 = workspace_fixture()
-      workspace2 = workspace_fixture()
-      user1 = "user1@example.com"
-      user2 = "user2@example.com"
-
-      # Helper function to create a socket for a specific workspace and user
-      create_socket = fn workspace_id, user_id ->
-        Map.put(
-          socket,
-          :assigns,
-          Map.merge(socket.assigns, %{
-            workspace_id: workspace_id,
-            current_user: user_id,
-            myself: "myself"
-          })
-        )
-      end
-
-      # Scenario 1: User1 in Workspace1
-      socket1 = create_socket.(workspace1.id, user1)
-
-      {:noreply, updated_socket1} =
-        ChatComponent.handle_event(
-          "chat_submit",
-          %{"value" => "User1 Workspace1 message"},
-          socket1
-        )
-
-      assert length(updated_socket1.assigns.chain.messages) == 2
-
-      # Scenario 2: User2 in Workspace1 (different user, same workspace)
-      socket2 = create_socket.(workspace1.id, user2)
-
-      {:noreply, updated_socket2} =
-        ChatComponent.handle_event(
-          "chat_submit",
-          %{"value" => "User2 Workspace1 message"},
-          socket2
-        )
-
-      assert length(updated_socket2.assigns.chain.messages) == 2
-
-      # Scenario 3: User1 in Workspace2 (same user, different workspace)
-      socket3 = create_socket.(workspace2.id, user1)
-
-      {:noreply, updated_socket3} =
-        ChatComponent.handle_event(
-          "chat_submit",
-          %{"value" => "User1 Workspace2 message"},
-          socket3
-        )
-
-      assert length(updated_socket3.assigns.chain.messages) == 2
-
-      # Verify isolation: Each combination should have different cached messages
-      cached_messages1 = Valentine.Cache.get({workspace1.id, user1, :chatbot_history})
-      cached_messages2 = Valentine.Cache.get({workspace1.id, user2, :chatbot_history})
-      cached_messages3 = Valentine.Cache.get({workspace2.id, user1, :chatbot_history})
-
-      # All three combinations should have different messages
-      assert hd(tl(cached_messages1)).content == "User1 Workspace1 message"
-      assert hd(tl(cached_messages2)).content == "User2 Workspace1 message"
-      assert hd(tl(cached_messages3)).content == "User1 Workspace2 message"
-
-      # Verify that restoring one doesn't affect others
-      assigns1 = %{
-        active_module: "some_module",
-        active_action: "some_action",
-        workspace_id: workspace1.id,
-        current_user: user1
-      }
-
-      new_socket1 = %Phoenix.LiveView.Socket{
-        assigns: Map.merge(socket.assigns, %{myself: "myself"})
-      }
-
-      {:ok, restored_socket1} = ChatComponent.update(assigns1, new_socket1)
-
-      assert length(restored_socket1.assigns.chain.messages) == 2
-      assert hd(tl(restored_socket1.assigns.chain.messages)).content == "User1 Workspace1 message"
-
-      # Cleanup
-      Valentine.Cache.delete({workspace1.id, user1, :chatbot_history})
-      Valentine.Cache.delete({workspace1.id, user2, :chatbot_history})
-      Valentine.Cache.delete({workspace2.id, user1, :chatbot_history})
     end
   end
 end
