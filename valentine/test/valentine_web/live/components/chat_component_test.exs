@@ -28,6 +28,33 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
     %{assigns: assigns, socket: socket}
   end
 
+  defp create_test_socket(base_socket, workspace_id, user_id) do
+    Map.put(
+      base_socket,
+      :assigns,
+      Map.merge(base_socket.assigns, %{
+        workspace_id: workspace_id,
+        current_user: user_id,
+        myself: "myself"
+      })
+    )
+  end
+
+  defp restore_chat_history(base_socket, workspace_id, user_id) do
+    {:ok, restored_socket} =
+      ChatComponent.update(
+        %{
+          active_module: "some_module",
+          active_action: "some_action",
+          workspace_id: workspace_id,
+          current_user: user_id
+        },
+        %Phoenix.LiveView.Socket{assigns: Map.merge(base_socket.assigns, %{myself: "myself"})}
+      )
+
+    restored_socket
+  end
+
   describe "render/1" do
     setup [:create_component]
 
@@ -174,20 +201,15 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
       user1 = "user1@example.com"
       user2 = "user2@example.com"
 
-      create_socket = fn workspace_id, user_id ->
-        Map.put(
-          socket,
-          :assigns,
-          Map.merge(socket.assigns, %{
-            workspace_id: workspace_id,
-            current_user: user_id,
-            myself: "myself"
-          })
-        )
-      end
+      # Register cleanup before any cache operations
+      on_exit(fn ->
+        Valentine.Cache.delete({workspace1.id, user1, :chatbot_history})
+        Valentine.Cache.delete({workspace1.id, user2, :chatbot_history})
+        Valentine.Cache.delete({workspace2.id, user1, :chatbot_history})
+      end)
 
       # Submit messages in three different contexts
-      socket1 = create_socket.(workspace1.id, user1)
+      socket1 = create_test_socket(socket, workspace1.id, user1)
 
       {:noreply, _} =
         ChatComponent.handle_event(
@@ -196,7 +218,7 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
           socket1
         )
 
-      socket2 = create_socket.(workspace1.id, user2)
+      socket2 = create_test_socket(socket, workspace1.id, user2)
 
       {:noreply, _} =
         ChatComponent.handle_event(
@@ -205,7 +227,7 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
           socket2
         )
 
-      socket3 = create_socket.(workspace2.id, user1)
+      socket3 = create_test_socket(socket, workspace2.id, user1)
 
       {:noreply, _} =
         ChatComponent.handle_event(
@@ -215,47 +237,18 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
         )
 
       # Verify each context restores its own history
-      {:ok, restored_socket1} =
-        ChatComponent.update(
-          %{
-            active_module: "some_module",
-            active_action: "some_action",
-            workspace_id: workspace1.id,
-            current_user: user1
-          },
-          %Phoenix.LiveView.Socket{assigns: Map.merge(socket.assigns, %{myself: "myself"})}
-        )
+      restored_socket1 = restore_chat_history(socket, workspace1.id, user1)
+      restored_socket2 = restore_chat_history(socket, workspace1.id, user2)
+      restored_socket3 = restore_chat_history(socket, workspace2.id, user1)
 
-      {:ok, restored_socket2} =
-        ChatComponent.update(
-          %{
-            active_module: "some_module",
-            active_action: "some_action",
-            workspace_id: workspace1.id,
-            current_user: user2
-          },
-          %Phoenix.LiveView.Socket{assigns: Map.merge(socket.assigns, %{myself: "myself"})}
-        )
+      assert Enum.at(restored_socket1.assigns.chain.messages, 1).content ==
+               "User1 Workspace1 message"
 
-      {:ok, restored_socket3} =
-        ChatComponent.update(
-          %{
-            active_module: "some_module",
-            active_action: "some_action",
-            workspace_id: workspace2.id,
-            current_user: user1
-          },
-          %Phoenix.LiveView.Socket{assigns: Map.merge(socket.assigns, %{myself: "myself"})}
-        )
+      assert Enum.at(restored_socket2.assigns.chain.messages, 1).content ==
+               "User2 Workspace1 message"
 
-      assert hd(tl(restored_socket1.assigns.chain.messages)).content == "User1 Workspace1 message"
-      assert hd(tl(restored_socket2.assigns.chain.messages)).content == "User2 Workspace1 message"
-      assert hd(tl(restored_socket3.assigns.chain.messages)).content == "User1 Workspace2 message"
-
-      # Cleanup
-      Valentine.Cache.delete({workspace1.id, user1, :chatbot_history})
-      Valentine.Cache.delete({workspace1.id, user2, :chatbot_history})
-      Valentine.Cache.delete({workspace2.id, user1, :chatbot_history})
+      assert Enum.at(restored_socket3.assigns.chain.messages, 1).content ==
+               "User1 Workspace2 message"
     end
   end
 
