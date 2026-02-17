@@ -29,7 +29,7 @@
 #   Imports:
 #     - github/gh-aw/.github/workflows/shared/mood.md@b13f581fe0b73a26ed590484553b57c0e00b6706
 #
-# frontmatter-hash: 23e39a7e6905f6ef55c625ade29d5706af471d7f9894e9afef1eefd640323563
+# frontmatter-hash: 39c3aff41fa6caa27634ffe2067c1251bc7426f034209e2b80c5e21044955f55
 
 name: "Grumpy Code Reviewer 🔥"
 "on":
@@ -391,6 +391,17 @@ jobs:
           script: |
             const validateLockdownRequirements = require('/opt/gh-aw/actions/validate_lockdown_requirements.cjs');
             validateLockdownRequirements(core);
+      - name: Generate GitHub App token
+        id: github-mcp-app-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: vedantthapa
+          repositories: navigator
+          github-api-url: ${{ github.api_url }}
+          permission-contents: read
+          permission-pull-requests: read
       - name: Download container images
         run: bash /opt/gh-aw/actions/download_docker_images.sh ghcr.io/github/gh-aw-firewall/agent:0.19.1 ghcr.io/github/gh-aw-firewall/squid:0.19.1 ghcr.io/github/gh-aw-mcpg:v0.1.4 ghcr.io/github/github-mcp-server:v0.30.3 node:lts-alpine
       - name: Write Safe Outputs Config
@@ -670,7 +681,7 @@ jobs:
           GH_AW_SAFE_OUTPUTS: ${{ env.GH_AW_SAFE_OUTPUTS }}
           GH_AW_SAFE_OUTPUTS_API_KEY: ${{ steps.safe-outputs-start.outputs.api_key }}
           GH_AW_SAFE_OUTPUTS_PORT: ${{ steps.safe-outputs-start.outputs.port }}
-          GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_MCP_SERVER_TOKEN: ${{ steps.github-mcp-app-token.outputs.token }}
         run: |
           set -eo pipefail
           mkdir -p /tmp/gh-aw/mcp-config
@@ -798,7 +809,8 @@ jobs:
             const { main } = require('/opt/gh-aw/actions/redact_secrets.cjs');
             await main();
         env:
-          GH_AW_SECRET_NAMES: 'COPILOT_GITHUB_TOKEN,GH_AW_GITHUB_MCP_SERVER_TOKEN,GH_AW_GITHUB_TOKEN,GITHUB_TOKEN'
+          GH_AW_SECRET_NAMES: 'APP_PRIVATE_KEY,COPILOT_GITHUB_TOKEN,GH_AW_GITHUB_MCP_SERVER_TOKEN,GH_AW_GITHUB_TOKEN,GITHUB_TOKEN'
+          SECRET_APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
           SECRET_COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           SECRET_GH_AW_GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN }}
           SECRET_GH_AW_GITHUB_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
@@ -896,6 +908,19 @@ jobs:
             /tmp/gh-aw/agent-stdio.log
             /tmp/gh-aw/agent/
           if-no-files-found: ignore
+      - name: Invalidate GitHub App token
+        if: always() && steps.github-mcp-app-token.outputs.token != ''
+        env:
+          TOKEN: ${{ steps.github-mcp-app-token.outputs.token }}
+        run: |
+          echo "Revoking GitHub App installation token..."
+          # GitHub CLI will auth with the token being revoked.
+          gh api \
+            --method DELETE \
+            -H "Authorization: token $TOKEN" \
+            /installation/token || echo "Token revoke may already be expired."
+          
+          echo "Token invalidation step complete."
 
   conclusion:
     needs:

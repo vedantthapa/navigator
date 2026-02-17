@@ -32,6 +32,11 @@ tools:
     toolsets:
     - pull_requests
     - repos
+    app:
+      app-id: ${{ vars.APP_ID }}
+      private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      owner: "vedantthapa"                    # Optional: defaults to current repo owner
+      repositories: ["navigator"] # Optional: defaults to current repo only
 ---
 # Grumpy Code Reviewer 🔥
 
