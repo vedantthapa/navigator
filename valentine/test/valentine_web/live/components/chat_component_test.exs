@@ -28,14 +28,14 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
     %{assigns: assigns, socket: socket}
   end
 
-  defp create_test_socket(base_socket, workspace_id, user_id) do
+  defp create_test_socket(base_socket, workspace_id, user_id, myself \\ "myself") do
     Map.put(
       base_socket,
       :assigns,
       Map.merge(base_socket.assigns, %{
         workspace_id: workspace_id,
         current_user: user_id,
-        myself: "myself"
+        myself: myself
       })
     )
   end
@@ -241,14 +241,28 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
       restored_socket2 = restore_chat_history(socket, workspace1.id, user2)
       restored_socket3 = restore_chat_history(socket, workspace2.id, user1)
 
-      assert Enum.at(restored_socket1.assigns.chain.messages, 1).content ==
-               "User1 Workspace1 message"
+      # Assert messages exist and have expected content
+      assert length(restored_socket1.assigns.chain.messages) == 2,
+             "Expected 2 messages in restored_socket1, got #{length(restored_socket1.assigns.chain.messages)}"
 
-      assert Enum.at(restored_socket2.assigns.chain.messages, 1).content ==
-               "User2 Workspace1 message"
+      assert length(restored_socket2.assigns.chain.messages) == 2,
+             "Expected 2 messages in restored_socket2, got #{length(restored_socket2.assigns.chain.messages)}"
 
-      assert Enum.at(restored_socket3.assigns.chain.messages, 1).content ==
-               "User1 Workspace2 message"
+      assert length(restored_socket3.assigns.chain.messages) == 2,
+             "Expected 2 messages in restored_socket3, got #{length(restored_socket3.assigns.chain.messages)}"
+
+      # Access second message (index 1) with safe guards
+      message1 = Enum.at(restored_socket1.assigns.chain.messages, 1)
+      message2 = Enum.at(restored_socket2.assigns.chain.messages, 1)
+      message3 = Enum.at(restored_socket3.assigns.chain.messages, 1)
+
+      assert message1 != nil, "Expected message at index 1 in restored_socket1, got nil"
+      assert message2 != nil, "Expected message at index 1 in restored_socket2, got nil"
+      assert message3 != nil, "Expected message at index 1 in restored_socket3, got nil"
+
+      assert message1.content == "User1 Workspace1 message"
+      assert message2.content == "User2 Workspace1 message"
+      assert message3.content == "User1 Workspace2 message"
     end
   end
 
