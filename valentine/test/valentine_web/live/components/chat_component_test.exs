@@ -281,4 +281,128 @@ defmodule ValentineWeb.WorkspaceLive.Components.ChatComponentTest do
       assert updated_socket.assigns.chain != nil
     end
   end
+
+  describe "chat history persistence" do
+    setup [:create_component]
+
+    test "persists chat history across socket sessions", %{socket: socket} do
+      workspace_id = socket.assigns.workspace_id
+      user_id = socket.assigns.current_user
+
+      # Clear any existing cache for this user/workspace
+      Valentine.Cache.delete({workspace_id, user_id, :chatbot_history})
+
+      # Simulate first session: submit a chat message
+      value = "Hello, world!"
+
+      {:noreply, first_socket} =
+        ChatComponent.handle_event("chat_submit", %{"value" => value}, socket)
+
+      # Verify messages were added to the chain
+      assert length(first_socket.assigns.chain.messages) == 2
+      first_messages = first_socket.assigns.chain.messages
+
+      # Verify messages were cached
+      cached_messages = Valentine.Cache.get({workspace_id, user_id, :chatbot_history})
+      assert cached_messages != nil
+      assert length(cached_messages) == 2
+
+      # Simulate second session: create new socket and update component
+      # This simulates a socket reconnection/remount
+      new_socket = %Phoenix.LiveView.Socket{
+        assigns: Map.put(socket.assigns, :myself, %{})
+      }
+
+      assigns = %{
+        workspace_id: workspace_id,
+        current_user: user_id,
+        active_module: "some_active_module",
+        active_action: "some_active_action"
+      }
+
+      {:ok, updated_socket} = ChatComponent.update(assigns, new_socket)
+
+      # Verify the cached messages were loaded into the new socket
+      assert length(updated_socket.assigns.chain.messages) == 2
+      assert updated_socket.assigns.chain.messages == first_messages
+
+      # Cleanup
+      Valentine.Cache.delete({workspace_id, user_id, :chatbot_history})
+    end
+
+    test "isolates chat history per user and workspace combination", %{socket: socket} do
+      workspace1_id = socket.assigns.workspace_id
+      workspace2 = workspace_fixture()
+      workspace2_id = workspace2.id
+
+      user1_id = "user1@example.com"
+      user2_id = "user2@example.com"
+
+      # Clear any existing cache
+      Valentine.Cache.delete({workspace1_id, user1_id, :chatbot_history})
+      Valentine.Cache.delete({workspace1_id, user2_id, :chatbot_history})
+      Valentine.Cache.delete({workspace2_id, user1_id, :chatbot_history})
+
+      # Create messages for user1 in workspace1
+      message1 = "User1 in Workspace1"
+
+      socket1 =
+        socket
+        |> Map.put(:assigns, Map.merge(socket.assigns, %{current_user: user1_id}))
+
+      {:noreply, _socket1_updated} =
+        ChatComponent.handle_event("chat_submit", %{"value" => message1}, socket1)
+
+      # Create messages for user2 in workspace1
+      message2 = "User2 in Workspace1"
+
+      socket2 =
+        socket
+        |> Map.put(:assigns, Map.merge(socket.assigns, %{current_user: user2_id}))
+
+      {:noreply, _socket2_updated} =
+        ChatComponent.handle_event("chat_submit", %{"value" => message2}, socket2)
+
+      # Create messages for user1 in workspace2
+      message3 = "User1 in Workspace2"
+
+      socket3 =
+        socket
+        |> Map.put(
+          :assigns,
+          Map.merge(socket.assigns, %{workspace_id: workspace2_id, current_user: user1_id})
+        )
+
+      {:noreply, _socket3_updated} =
+        ChatComponent.handle_event("chat_submit", %{"value" => message3}, socket3)
+
+      # Verify each combination has separate cached messages
+      cached1 = Valentine.Cache.get({workspace1_id, user1_id, :chatbot_history})
+      cached2 = Valentine.Cache.get({workspace1_id, user2_id, :chatbot_history})
+      cached3 = Valentine.Cache.get({workspace2_id, user1_id, :chatbot_history})
+
+      assert cached1 != nil
+      assert cached2 != nil
+      assert cached3 != nil
+
+      # Verify the messages are different and contain the correct content
+      assert Enum.any?(cached1, fn msg -> msg.content == message1 end)
+      assert Enum.any?(cached2, fn msg -> msg.content == message2 end)
+      assert Enum.any?(cached3, fn msg -> msg.content == message3 end)
+
+      # Verify user1's message in workspace1 is NOT in user2's cache
+      refute Enum.any?(cached2, fn msg -> msg.content == message1 end)
+
+      # Verify user1's message in workspace1 is NOT in user1's workspace2 cache
+      refute Enum.any?(cached3, fn msg -> msg.content == message1 end)
+
+      # Verify user2's message is NOT in user1's workspace1 cache
+      refute Enum.any?(cached1, fn msg -> msg.content == message2 end)
+
+      # Cleanup
+      Valentine.Cache.delete({workspace1_id, user1_id, :chatbot_history})
+      Valentine.Cache.delete({workspace1_id, user2_id, :chatbot_history})
+      Valentine.Cache.delete({workspace2_id, user1_id, :chatbot_history})
+    end
+  end
 end
