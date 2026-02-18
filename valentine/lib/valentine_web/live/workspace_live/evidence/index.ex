@@ -2,9 +2,7 @@ defmodule ValentineWeb.WorkspaceLive.Evidence.Index do
   use ValentineWeb, :live_view
   use PrimerLive
 
-  import Ecto.Query
   alias Valentine.Composer
-  alias Valentine.Composer.Evidence
 
   @impl true
   def mount(%{"workspace_id" => workspace_id} = _params, _session, socket) do
@@ -76,42 +74,11 @@ defmodule ValentineWeb.WorkspaceLive.Evidence.Index do
   end
 
   defp get_evidence_list(workspace_id) do
-    from(e in Evidence,
-      where: e.workspace_id == ^workspace_id,
-      preload: [:assumptions, :threats, :mitigations],
-      order_by: [desc: e.inserted_at]
-    )
-    |> Valentine.Repo.all()
+    Composer.list_evidence_by_workspace(workspace_id, %{})
   end
 
   defp get_filtered_evidence_list(workspace_id, filters) do
-    base_query =
-      from(e in Evidence,
-        where: e.workspace_id == ^workspace_id,
-        preload: [:assumptions, :threats, :mitigations],
-        order_by: [desc: e.inserted_at]
-      )
-
-    apply_filters(base_query, filters)
-    |> Valentine.Repo.all()
-  end
-
-  defp apply_filters(query, filters) do
-    Enum.reduce(filters, query, fn {key, values}, acc_query ->
-      case key do
-        :evidence_type when is_list(values) and length(values) > 0 ->
-          from(e in acc_query, where: e.evidence_type in ^values)
-
-        :tags when is_list(values) and length(values) > 0 ->
-          from(e in acc_query, where: fragment("? && ?", e.tags, ^values))
-
-        :nist_controls when is_list(values) and length(values) > 0 ->
-          from(e in acc_query, where: fragment("? && ?", e.nist_controls, ^values))
-
-        _ ->
-          acc_query
-      end
-    end)
+    Composer.list_evidence_by_workspace(workspace_id, filters)
   end
 
   defp get_workspace(id) do
@@ -119,7 +86,7 @@ defmodule ValentineWeb.WorkspaceLive.Evidence.Index do
   end
 
   defp format_evidence_type(:json_data), do: "JSON Data"
-  defp format_evidence_type(:blob_store_link), do: "File Link"
+  defp format_evidence_type(:blob_store_link), do: "Blob Store Link"
   defp format_evidence_type(type), do: to_string(type) |> String.capitalize()
 
   defp format_date(datetime) do

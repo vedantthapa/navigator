@@ -1781,7 +1781,41 @@ defmodule Valentine.Composer do
 
   """
   def list_evidence(workspace_id) do
-    Repo.all(from e in Evidence, where: e.workspace_id == ^workspace_id)
+    list_evidence_by_workspace(workspace_id, %{})
+  end
+
+  @doc """
+  Returns the list of evidence for a specific workspace with optional filters.
+
+  ## Parameters
+
+    * workspace_id - The UUID of the workspace to filter evidence by
+    * filters - Optional filters for evidence_type, tags, or nist_controls
+
+  """
+  def list_evidence_by_workspace(workspace_id, filters \\ %{}) do
+    Evidence
+    |> where([e], e.workspace_id == ^workspace_id)
+    |> apply_evidence_filters(filters)
+    |> order_by([e], desc: e.inserted_at)
+    |> preload([:assumptions, :threats, :mitigations])
+    |> Repo.all()
+  end
+
+  defp apply_evidence_filters(query, filters) do
+    Enum.reduce(filters, query, fn
+      {:evidence_type, values}, queryable when is_list(values) and length(values) > 0 ->
+        where(queryable, [e], e.evidence_type in ^values)
+
+      {:tags, values}, queryable when is_list(values) and length(values) > 0 ->
+        where(queryable, [e], fragment("? && ?", e.tags, ^values))
+
+      {:nist_controls, values}, queryable when is_list(values) and length(values) > 0 ->
+        where(queryable, [e], fragment("? && ?", e.nist_controls, ^values))
+
+      _, queryable ->
+        queryable
+    end)
   end
 
   @doc """
@@ -1798,7 +1832,14 @@ defmodule Valentine.Composer do
       ** (Ecto.NoResultsError)
 
   """
-  def get_evidence!(id), do: Repo.get!(Evidence, id)
+  def get_evidence!(id, _preload \\ nil)
+
+  def get_evidence!(id, preload) when is_list(preload) do
+    Repo.get!(Evidence, id)
+    |> Repo.preload(preload)
+  end
+
+  def get_evidence!(id, preload) when is_nil(preload), do: Repo.get!(Evidence, id)
 
   @doc """
   Creates evidence.
@@ -1863,6 +1904,87 @@ defmodule Valentine.Composer do
   """
   def change_evidence(%Evidence{} = evidence, attrs \\ %{}) do
     Evidence.changeset(evidence, attrs)
+  end
+
+  @doc """
+  Adds a specific assumption to an evidence item.
+  """
+  def add_assumption_to_evidence(%Evidence{} = evidence, %Assumption{} = assumption) do
+    %EvidenceAssumption{evidence_id: evidence.id, assumption_id: assumption.id}
+    |> Repo.insert()
+    |> case do
+      {:ok, _} -> {:ok, evidence |> Repo.preload(:assumptions, force: true)}
+      {:error, _} -> {:error, evidence}
+    end
+  end
+
+  @doc """
+  Removes a specific assumption from an evidence item.
+  """
+  def remove_assumption_from_evidence(%Evidence{} = evidence, %Assumption{} = assumption) do
+    Repo.delete_all(
+      from(ea in EvidenceAssumption,
+        where: ea.evidence_id == ^evidence.id and ea.assumption_id == ^assumption.id
+      )
+    )
+    |> case do
+      {1, nil} -> {:ok, evidence |> Repo.preload(:assumptions, force: true)}
+      {:error, _} -> {:error, evidence}
+    end
+  end
+
+  @doc """
+  Adds a specific threat to an evidence item.
+  """
+  def add_threat_to_evidence(%Evidence{} = evidence, %Threat{} = threat) do
+    %EvidenceThreat{evidence_id: evidence.id, threat_id: threat.id}
+    |> Repo.insert()
+    |> case do
+      {:ok, _} -> {:ok, evidence |> Repo.preload(:threats, force: true)}
+      {:error, _} -> {:error, evidence}
+    end
+  end
+
+  @doc """
+  Removes a specific threat from an evidence item.
+  """
+  def remove_threat_from_evidence(%Evidence{} = evidence, %Threat{} = threat) do
+    Repo.delete_all(
+      from(et in EvidenceThreat,
+        where: et.evidence_id == ^evidence.id and et.threat_id == ^threat.id
+      )
+    )
+    |> case do
+      {1, nil} -> {:ok, evidence |> Repo.preload(:threats, force: true)}
+      {:error, _} -> {:error, evidence}
+    end
+  end
+
+  @doc """
+  Adds a specific mitigation to an evidence item.
+  """
+  def add_mitigation_to_evidence(%Evidence{} = evidence, %Mitigation{} = mitigation) do
+    %EvidenceMitigation{evidence_id: evidence.id, mitigation_id: mitigation.id}
+    |> Repo.insert()
+    |> case do
+      {:ok, _} -> {:ok, evidence |> Repo.preload(:mitigations, force: true)}
+      {:error, _} -> {:error, evidence}
+    end
+  end
+
+  @doc """
+  Removes a specific mitigation from an evidence item.
+  """
+  def remove_mitigation_from_evidence(%Evidence{} = evidence, %Mitigation{} = mitigation) do
+    Repo.delete_all(
+      from(em in EvidenceMitigation,
+        where: em.evidence_id == ^evidence.id and em.mitigation_id == ^mitigation.id
+      )
+    )
+    |> case do
+      {1, nil} -> {:ok, evidence |> Repo.preload(:mitigations, force: true)}
+      {:error, _} -> {:error, evidence}
+    end
   end
 
   @doc """

@@ -1,5 +1,10 @@
 <.subhead>
   {gettext("Evidence Overview")}
+  <:actions>
+    <.link navigate={~p"/workspaces/#{@workspace_id}/evidence/new"}>
+      <.button is_primary>{gettext("New Evidence")}</.button>
+    </.link>
+  </:actions>
 </.subhead>
 
 <%= if length(@evidence) == 0 do %>
@@ -15,11 +20,14 @@
   <% else %>
     <.blankslate class="color-bg-default">
       <:octicon name="file-24" />
+      <:action>
+        <.link navigate={~p"/workspaces/#{@workspace_id}/evidence/new"}>
+          <.button is_primary>{gettext("Create evidence")}</.button>
+        </.link>
+      </:action>
       <h3>{gettext("No evidence found")}</h3>
       <p>
-        {gettext(
-          "Evidence will appear here when created through the API or linked to threats, assumptions, or mitigations."
-        )}
+        {gettext("Add evidence manually or link it to your workspace entities.")}
       </p>
     </.blankslate>
   <% end %>
@@ -68,7 +76,12 @@
         <div class="flex-auto">
           <div class="d-flex flex-items-center">
             <h3 class="f3 text-bold mr-2">
-              {evidence.name}
+              <.link
+                navigate={~p"/workspaces/#{@workspace_id}/evidence/#{evidence.id}"}
+                class="Link--primary"
+              >
+                {evidence.name}
+              </.link>
             </h3>
             <.label class="mr-2">
               {format_evidence_type(evidence.evidence_type)}
@@ -163,7 +176,12 @@
           </div>
         </div>
 
-        <div class="flex-shrink-0 ml-3">
+        <div class="flex-shrink-0 ml-3 d-flex flex-items-center">
+          <.link navigate={~p"/workspaces/#{@workspace_id}/evidence/#{evidence.id}/edit"}>
+            <.button is_icon_button class="mr-2" id={"edit-evidence-#{evidence.id}"}>
+              <.octicon name="pencil-16" />
+            </.button>
+          </.link>
           <.button
             is_icon_button
             phx-click="delete"

@@ -63,3 +63,37 @@ After running the script, view the generated evidence at:
 - Generates valid blob store URLs for file-based evidence
 - Uses random selection from predefined NIST controls and tags
 - Includes 100ms delay between creations to avoid database overload
+
+### `generate_evidence_docker.sh`
+
+A docker compose-friendly variant that uses the running container to create evidence via
+`/app/bin/valentine eval`.
+
+**Purpose:** Creates realistic test evidence data to populate workspaces for development and testing purposes.
+
+**Prerequisites:**
+- Docker compose stack is running
+- Database migrations have been run inside the container
+
+**Usage:**
+```bash
+./scripts/generate_evidence_docker.sh <workspace_id> [count]
+```
+
+**Parameters:**
+- `workspace_id`: The UUID of the target workspace
+- `count`: Optional. Number of evidence items to create (default: 10)
+
+**Examples:**
+```bash
+# Generate 10 evidence items (default)
+./scripts/generate_evidence_docker.sh 550e8400-e29b-41d4-a716-446655440000
+
+# Generate 25 evidence items
+./scripts/generate_evidence_docker.sh 550e8400-e29b-41d4-a716-446655440000 25
+```
+
+**Container Usage (optional):**
+```bash
+docker compose exec app bash /app/scripts/generate_evidence_docker.sh 550e8400-e29b-41d4-a716-446655440000 10
+```

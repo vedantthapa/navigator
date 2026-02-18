@@ -1,0 +1,155 @@
+<.subhead>
+  {@evidence.name}
+  <:actions>
+    <.link navigate={~p"/workspaces/#{@workspace_id}/evidence"}>
+      <.button>{gettext("Back")}</.button>
+    </.link>
+    <.link navigate={~p"/workspaces/#{@workspace_id}/evidence/#{@evidence.id}/edit"}>
+      <.button is_primary>{gettext("Edit")}</.button>
+    </.link>
+  </:actions>
+</.subhead>
+
+<div class="clearfix">
+  <div class="float-left col-8">
+    <.box class="p-4">
+      <h3>{gettext("Evidence Metadata")}</h3>
+
+      <div class="mt-2">
+        <span class="f6 color-fg-muted">{gettext("Type")}:</span>
+        <.label class="ml-1">{format_evidence_type(@evidence.evidence_type)}</.label>
+      </div>
+
+      <p :if={@evidence.description} class="f5 color-fg-muted mt-3">
+        {@evidence.description}
+      </p>
+
+      <div :if={length(@evidence.tags || []) > 0} class="mt-3">
+        <span class="f6 color-fg-muted mr-2">{gettext("Tags")}:</span>
+        <.label :for={tag <- @evidence.tags} class="mr-1">
+          {tag}
+        </.label>
+      </div>
+
+      <div :if={length(@evidence.nist_controls || []) > 0} class="mt-3">
+        <span class="f6 color-fg-muted mr-2">{gettext("NIST Controls")}:</span>
+        <.label :for={control <- @evidence.nist_controls} is_secondary class="mr-1">
+          {control}
+        </.label>
+      </div>
+    </.box>
+
+    <.box class="p-4 mt-3">
+      <h3>{gettext("Evidence Content")}</h3>
+
+      <%= if @evidence.evidence_type == :json_data do %>
+        <pre class="mt-2">{@json_content}</pre>
+      <% else %>
+        <.link href={@evidence.blob_store_url} target="_blank" class="Link--primary">
+          {@evidence.blob_store_url}
+        </.link>
+      <% end %>
+    </.box>
+  </div>
+
+  <div class="float-left col-4 pl-4">
+    <.box class="p-4">
+      <h3>{gettext("Linked Entities")}</h3>
+
+      <div class="mt-3">
+        <h4 class="f6 text-bold">{gettext("Assumptions")}</h4>
+        <.live_component
+          module={ValentineWeb.WorkspaceLive.Components.DropdownSelectComponent}
+          id="evidence-show-assumptions-dropdown"
+          name="assumptions"
+          items={
+            (@workspace.assumptions || [])
+            |> Kernel.--(@evidence.assumptions || [])
+            |> Enum.map(fn assumption -> %{id: assumption.id, name: assumption.content} end)
+          }
+        />
+        <div class="mt-2">
+          <%= if length(@evidence.assumptions || []) > 0 do %>
+            <%= for assumption <- @evidence.assumptions || [] do %>
+              <.button
+                id={"linked-assumption-#{assumption.id}"}
+                phx-click="unlink_assumption"
+                phx-value-id={assumption.id}
+                class="tag-button mt-1"
+              >
+                <span>{assumption.content}</span>
+                <.octicon name="x-16" />
+              </.button>
+            <% end %>
+          <% else %>
+            <span class="f6 color-fg-muted">{gettext("No assumptions linked")}</span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <h4 class="f6 text-bold">{gettext("Threats")}</h4>
+        <.live_component
+          module={ValentineWeb.WorkspaceLive.Components.DropdownSelectComponent}
+          id="evidence-show-threats-dropdown"
+          name="threats"
+          items={
+            (@workspace.threats || [])
+            |> Kernel.--(@evidence.threats || [])
+            |> Enum.map(fn threat ->
+              %{id: threat.id, name: Valentine.Composer.Threat.show_statement(threat)}
+            end)
+          }
+        />
+        <div class="mt-2">
+          <%= if length(@evidence.threats || []) > 0 do %>
+            <%= for threat <- @evidence.threats || [] do %>
+              <.button
+                id={"linked-threat-#{threat.id}"}
+                phx-click="unlink_threat"
+                phx-value-id={threat.id}
+                class="tag-button mt-1"
+              >
+                <span>{Valentine.Composer.Threat.show_statement(threat)}</span>
+                <.octicon name="x-16" />
+              </.button>
+            <% end %>
+          <% else %>
+            <span class="f6 color-fg-muted">{gettext("No threats linked")}</span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <h4 class="f6 text-bold">{gettext("Mitigations")}</h4>
+        <.live_component
+          module={ValentineWeb.WorkspaceLive.Components.DropdownSelectComponent}
+          id="evidence-show-mitigations-dropdown"
+          name="mitigations"
+          items={
+            (@workspace.mitigations || [])
+            |> Kernel.--(@evidence.mitigations || [])
+            |> Enum.map(fn mitigation -> %{id: mitigation.id, name: mitigation.content} end)
+          }
+        />
+        <div class="mt-2">
+          <%= if length(@evidence.mitigations || []) > 0 do %>
+            <%= for mitigation <- @evidence.mitigations || [] do %>
+              <.button
+                id={"linked-mitigation-#{mitigation.id}"}
+                phx-click="unlink_mitigation"
+                phx-value-id={mitigation.id}
+                class="tag-button mt-1"
+              >
+                <span>{mitigation.content}</span>
+                <.octicon name="x-16" />
+              </.button>
+            <% end %>
+          <% else %>
+            <span class="f6 color-fg-muted">{gettext("No mitigations linked")}</span>
+          <% end %>
+        </div>
+      </div>
+    </.box>
+  </div>
+</div>

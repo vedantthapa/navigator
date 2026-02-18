@@ -12,6 +12,8 @@ services:
       OPENAI_API_KEY: $OPENAI_API_KEY
       PHX_HOST: "localhost"
       SECRET_KEY_BASE: "LZcrpJerGFAOAk9tmX++gOlapKEvjcahler184AEFKAEpnQPRzKtTN737XXsrdFG" # Generate a secret key with `mix phx.gen.secret` if you use this in production
+    volumes:
+      - ./scripts:/app/scripts
   db:
     image: postgres:13
     restart: always

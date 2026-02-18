@@ -1,0 +1,223 @@
+<.subhead>
+  <%= if @evidence.id do %>
+    {gettext("Edit Evidence")}
+  <% else %>
+    {gettext("New Evidence")}
+  <% end %>
+  <:actions>
+    <.link navigate={~p"/workspaces/#{@workspace_id}/evidence"}>
+      <.button>{gettext("Back")}</.button>
+    </.link>
+  </:actions>
+</.subhead>
+
+<.form
+  :let={f}
+  for={@changeset}
+  id="evidence-form"
+  phx-change="validate"
+  phx-submit="save"
+>
+  <div class="clearfix">
+    <div class="float-left col-8">
+      <.box class="p-4">
+        <h3>{gettext("Evidence Details")}</h3>
+
+        <%= if @changeset.action && @changeset.errors != [] do %>
+          <.alert state="error" class="mt-2">
+            <p><.octicon name="stop-16" /> {gettext("Please fix the errors below.")}</p>
+            <ul class="ml-6">
+              <%= for {field, {msg, opts}} <- @changeset.errors do %>
+                <li>
+                  {Phoenix.Naming.humanize(field)}
+                  {ValentineWeb.CoreComponents.translate_error({msg, opts})}
+                </li>
+              <% end %>
+            </ul>
+          </.alert>
+        <% end %>
+
+        <.text_input
+          form={f}
+          field={:name}
+          form_control={%{label: gettext("Name")}}
+          class="mt-3"
+          placeholder={gettext("Evidence name")}
+          is_full_width
+          is_form_control
+        />
+
+        <.textarea
+          form={f}
+          field={:description}
+          form_control={%{label: gettext("Description")}}
+          class="mt-3"
+          placeholder={gettext("Describe the evidence")}
+          is_full_width
+          rows="4"
+          is_form_control
+        />
+
+        <div class="mt-3">
+          <label class="f6 text-bold" for="evidence-type">{gettext("Evidence Type")}</label>
+          <.select
+            name="evidence[evidence_type]"
+            class="mt-1"
+            options={
+              Ecto.Enum.values(Valentine.Composer.Evidence, :evidence_type)
+              |> Enum.map(fn type -> {format_evidence_type(type), Atom.to_string(type)} end)
+            }
+            input_id="evidence-type"
+            selected={Atom.to_string(@selected_type)}
+            is_full_width
+          />
+        </div>
+
+        <.text_input
+          name="evidence[tags]"
+          value={@tags_text}
+          form_control={%{label: gettext("Tags")}}
+          class="mt-3"
+          placeholder={gettext("Comma-separated tags")}
+          is_full_width
+          is_form_control
+        />
+
+        <.text_input
+          name="evidence[nist_controls]"
+          value={@nist_controls_text}
+          form_control={%{label: gettext("NIST Controls")}}
+          class="mt-3"
+          placeholder={gettext("Comma-separated NIST control IDs")}
+          is_full_width
+          is_form_control
+        />
+
+        <%= if @selected_type == :json_data do %>
+          <.textarea
+            name="evidence[json_content]"
+            value={@json_text}
+            form_control={%{label: gettext("JSON Content")}}
+            class="mt-3"
+            placeholder={"{\n  \"key\": \"value\"\n}"}
+            is_full_width
+            rows="8"
+            is_form_control
+          />
+
+          <%= if @json_error do %>
+            <p class="f6 color-fg-danger mt-1">
+              <.octicon name="stop-16" class="mr-1" />
+              {@json_error}
+            </p>
+          <% end %>
+        <% else %>
+          <.text_input
+            form={f}
+            field={:blob_store_url}
+            form_control={%{label: gettext("Blob Store URL")}}
+            class="mt-3"
+            placeholder={gettext("https://example.com/path/to/evidence")}
+            is_full_width
+            is_form_control
+          />
+        <% end %>
+
+        <input type="hidden" value={@workspace_id} name="evidence[workspace_id]" />
+      </.box>
+
+      <div class="mt-3">
+        <.button is_primary is_submit phx-disable-with={gettext("Saving...")}>
+          {gettext("Save Evidence")}
+        </.button>
+      </div>
+    </div>
+
+    <div class="float-left col-4 pl-4">
+      <.box class="p-4">
+        <h3>{gettext("Link Evidence")}</h3>
+        <p class="f6 color-fg-muted">
+          {gettext("Select a related entity to link when you save this evidence.")}
+        </p>
+
+        <div class="mt-3">
+          <h4 class="f6 text-bold">{gettext("Assumption")}</h4>
+          <.live_component
+            module={ValentineWeb.WorkspaceLive.Components.DropdownSelectComponent}
+            id="evidence-assumptions-dropdown"
+            name="assumptions"
+            items={
+              (@workspace.assumptions || [])
+              |> Kernel.--(@evidence.assumptions || [])
+              |> Enum.map(fn assumption -> %{id: assumption.id, name: assumption.content} end)
+            }
+          />
+          <%= if @selected_assumption do %>
+            <p class="f6 color-fg-muted mt-2">
+              {gettext("Selected:")} {@selected_assumption.name}
+            </p>
+          <% end %>
+          <%= if length(@evidence.assumptions || []) > 0 do %>
+            <div class="mt-2">
+              <.label :for={assumption <- @evidence.assumptions} class="mr-1">
+                {assumption.content}
+              </.label>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="mt-4">
+          <h4 class="f6 text-bold">{gettext("Threat")}</h4>
+          <.live_component
+            module={ValentineWeb.WorkspaceLive.Components.DropdownSelectComponent}
+            id="evidence-threats-dropdown"
+            name="threats"
+            items={
+              (@workspace.threats || [])
+              |> Kernel.--(@evidence.threats || [])
+              |> Enum.map(fn threat ->
+                %{id: threat.id, name: Valentine.Composer.Threat.show_statement(threat)}
+              end)
+            }
+          />
+          <%= if @selected_threat do %>
+            <p class="f6 color-fg-muted mt-2">{gettext("Selected:")} {@selected_threat.name}</p>
+          <% end %>
+          <%= if length(@evidence.threats || []) > 0 do %>
+            <div class="mt-2">
+              <.label :for={threat <- @evidence.threats} class="mr-1">
+                {Valentine.Composer.Threat.show_statement(threat)}
+              </.label>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="mt-4">
+          <h4 class="f6 text-bold">{gettext("Mitigation")}</h4>
+          <.live_component
+            module={ValentineWeb.WorkspaceLive.Components.DropdownSelectComponent}
+            id="evidence-mitigations-dropdown"
+            name="mitigations"
+            items={
+              (@workspace.mitigations || [])
+              |> Kernel.--(@evidence.mitigations || [])
+              |> Enum.map(fn mitigation -> %{id: mitigation.id, name: mitigation.content} end)
+            }
+          />
+          <%= if @selected_mitigation do %>
+            <p class="f6 color-fg-muted mt-2">
+              {gettext("Selected:")} {@selected_mitigation.name}
+            </p>
+          <% end %>
+          <%= if length(@evidence.mitigations || []) > 0 do %>
+            <div class="mt-2">
+              <.label :for={mitigation <- @evidence.mitigations} class="mr-1">
+                {mitigation.content}
+              </.label>
+            </div>
+          <% end %>
+        </div>
+      </.box>
+    </div>
+  </div>
+</.form>
