@@ -78,11 +78,19 @@ defmodule Valentine.Composer.Workspace do
   ## Examples
 
       iex> evidence = [
-      ...>   %Evidence{id: 1, nist_controls: ["AC-1", "SC-7"]},
-      ...>   %Evidence{id: 2, nist_controls: ["AC-1"]}
+      ...>   %Valentine.Composer.Evidence{id: 1, nist_controls: ["AC-1", "SC-7"]},
+      ...>   %Valentine.Composer.Evidence{id: 2, nist_controls: ["AC-1"]}
       ...> ]
       iex> get_evidence_by_controls(evidence)
-      %{"AC-1" => [%Evidence{id: 1}, %Evidence{id: 2}], "SC-7" => [%Evidence{id: 1}]}
+      %{
+      ...>   "AC-1" => [
+      ...>     %Valentine.Composer.Evidence{id: 1},
+      ...>     %Valentine.Composer.Evidence{id: 2}
+      ...>   ],
+      ...>   "SC-7" => [
+      ...>     %Valentine.Composer.Evidence{id: 1}
+      ...>   ]
+      ...> }
   """
   def get_evidence_by_controls(evidence_collection) do
     evidence_collection
@@ -91,7 +99,7 @@ defmodule Valentine.Composer.Workspace do
       evidence.nist_controls
       |> Enum.filter(&Regex.match?(@nist_id_regex, &1))
       |> Enum.reduce(acc, fn control_id, acc ->
-        Map.update(acc, control_id, [evidence], &(&1 ++ [evidence]))
+        Map.update(acc, control_id, [evidence], &[evidence | &1])
       end)
     end)
   end

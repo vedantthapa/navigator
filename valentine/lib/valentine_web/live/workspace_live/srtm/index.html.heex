@@ -145,35 +145,35 @@
 
         <% # Show evidence filter only in the "In scope" tab %>
         <%= if String.to_existing_atom(tab) == :in_scope do %>
-            <.underline_nav aria_label={gettext("Filter by evidence status")}>
-              <:item
-                is_selected={@evidence_filter == :all}
-                phx-click="select_evidence_filter"
-                phx-value-filter="all"
-                type="button"
-              >
-                <span>{gettext("All")}</span>
-                <.counter>{evidence_counts.all}</.counter>
-              </:item>
-              <:item
-                is_selected={@evidence_filter == :needs_evidence}
-                phx-click="select_evidence_filter"
-                phx-value-filter="needs_evidence"
-                type="button"
-              >
-                <span>{gettext("Needs evidence")}</span>
-                <.counter>{evidence_counts.needs_evidence}</.counter>
-              </:item>
-              <:item
-                is_selected={@evidence_filter == :has_evidence}
-                phx-click="select_evidence_filter"
-                phx-value-filter="has_evidence"
-                type="button"
-              >
-                <span>{gettext("Evidence attached")}</span>
-                <.counter>{evidence_counts.has_evidence}</.counter>
-              </:item>
-            </.underline_nav>
+          <.underline_nav aria_label={gettext("Filter by evidence status")}>
+            <:item
+              is_selected={@evidence_filter == :all}
+              phx-click="select_evidence_filter"
+              phx-value-filter="all"
+              type="button"
+            >
+              <span>{gettext("All")}</span>
+              <.counter>{evidence_counts.all}</.counter>
+            </:item>
+            <:item
+              is_selected={@evidence_filter == :needs_evidence}
+              phx-click="select_evidence_filter"
+              phx-value-filter="needs_evidence"
+              type="button"
+            >
+              <span>{gettext("Needs evidence")}</span>
+              <.counter>{evidence_counts.needs_evidence}</.counter>
+            </:item>
+            <:item
+              is_selected={@evidence_filter == :has_evidence}
+              phx-click="select_evidence_filter"
+              phx-value-filter="has_evidence"
+              type="button"
+            >
+              <span>{gettext("Evidence attached")}</span>
+              <.counter>{evidence_counts.has_evidence}</.counter>
+            </:item>
+          </.underline_nav>
         <% end %>
 
         <% # Apply filtering for in-scope controls %>
@@ -218,6 +218,7 @@
                         <a
                           href={~p"/workspaces/#{@workspace.id}/evidence/#{evidence.id}"}
                           target="_blank"
+                          rel="noopener noreferrer"
                           class="ml-1 cursor-pointer"
                           title={evidence.name}
                         >
