@@ -61,7 +61,47 @@
   </:header>
 
   <div class="clearfix">
-    <div class="col-12 col-md-4 float-left py-4 pl-4">
+    <div class="col-12 col-md-8 float-left py-4 pl-4 pr-0">
+      <div class="clearfix">
+        <div class="p-4 border border-right-0 rounded-left-2 col-12 col-md-6 float-left">
+          <div class="f4">{gettext("In scope")}</div>
+          <div class="float-left">
+            <div class="f2 text-bold">{map_size(@controls[:in_scope])}</div>
+          </div>
+          <div class="float-right">
+            <div class="mt-2">{calculate_percentage(@controls, :in_scope)}%</div>
+          </div>
+          <div class="col-12 float-left">
+            <.progress is_inline style="width: 100%;">
+              <:item
+                width={calculate_percentage(@controls, :in_scope)}
+                state={scope_progress_class(:in_scope)}
+              >
+              </:item>
+            </.progress>
+          </div>
+        </div>
+        <div class="p-4 border rounded-right-2 col-12 col-md-6 float-left">
+          <div class="f4">{gettext("Out of scope")}</div>
+          <div class="float-left">
+            <div class="f2 text-bold">{map_size(@controls[:out_of_scope])}</div>
+          </div>
+          <div class="float-right">
+            <div class="mt-2">{calculate_percentage(@controls, :out_of_scope)}%</div>
+          </div>
+          <div class="col-12 float-left">
+            <.progress is_inline style="width: 100%;">
+              <:item
+                width={calculate_percentage(@controls, :out_of_scope)}
+                state={scope_progress_class(:out_of_scope)}
+              >
+              </:item>
+            </.progress>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4 float-left py-4 pl-4 pr-4 d-flex flex-column flex-justify-center">
       <div class="p-4 border rounded-2">
         <div class="f4">{gettext("Not allocated")}</div>
         <div class="clearfix">
@@ -83,55 +123,15 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-8 float-left p-4">
-      <div class="clearfix">
-        <div class="p-4 border border-right-0 rounded-left-2 col-12 col-md-6 float-left">
-          <div class="f4">{gettext("Out of scope")}</div>
-          <div class="float-left">
-            <div class="f2 text-bold">{map_size(@controls[:out_of_scope])}</div>
-          </div>
-          <div class="float-right">
-            <div class="mt-2">{calculate_percentage(@controls, :out_of_scope)}%</div>
-          </div>
-          <div class="col-12 float-left">
-            <.progress is_inline style="width: 100%;">
-              <:item
-                width={calculate_percentage(@controls, :out_of_scope)}
-                state={scope_progress_class(:out_of_scope)}
-              >
-              </:item>
-            </.progress>
-          </div>
-        </div>
-        <div class="p-4 border rounded-right-2 col-12 col-md-6 float-left">
-          <div class="f4">{gettext("In scope")}</div>
-          <div class="float-left">
-            <div class="f2 text-bold">{map_size(@controls[:in_scope])}</div>
-          </div>
-          <div class="float-right">
-            <div class="mt-2">{calculate_percentage(@controls, :in_scope)}%</div>
-          </div>
-          <div class="col-12 float-left">
-            <.progress is_inline style="width: 100%;">
-              <:item
-                width={calculate_percentage(@controls, :in_scope)}
-                state={scope_progress_class(:in_scope)}
-              >
-              </:item>
-            </.progress>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   <div class="clearfix m-2">
     <.live_component
       module={ValentineWeb.WorkspaceLive.Components.TabNavComponent}
       id="tabs-component-srtm"
       tabs={[
-        %{label: gettext("Not allocated"), id: "not_allocated"},
+        %{label: gettext("In scope"), id: "in_scope"},
         %{label: gettext("Out of scope"), id: "out_of_scope"},
-        %{label: gettext("In scope"), id: "in_scope"}
+        %{label: gettext("Not allocated"), id: "not_allocated"}
       ]}
     >
       <:tab_content :let={tab}>
@@ -145,35 +145,35 @@
 
         <% # Show evidence filter only in the "In scope" tab %>
         <%= if String.to_existing_atom(tab) == :in_scope do %>
-            <.underline_nav aria_label={gettext("Filter by evidence status")}>
-              <:item
-                is_selected={@evidence_filter == :all}
-                phx-click="select_evidence_filter"
-                phx-value-filter="all"
-                type="button"
-              >
-                <span>{gettext("All")}</span>
-                <.counter>{evidence_counts.all}</.counter>
-              </:item>
-              <:item
-                is_selected={@evidence_filter == :needs_evidence}
-                phx-click="select_evidence_filter"
-                phx-value-filter="needs_evidence"
-                type="button"
-              >
-                <span>{gettext("Needs evidence")}</span>
-                <.counter>{evidence_counts.needs_evidence}</.counter>
-              </:item>
-              <:item
-                is_selected={@evidence_filter == :has_evidence}
-                phx-click="select_evidence_filter"
-                phx-value-filter="has_evidence"
-                type="button"
-              >
-                <span>{gettext("Evidence attached")}</span>
-                <.counter>{evidence_counts.has_evidence}</.counter>
-              </:item>
-            </.underline_nav>
+          <.underline_nav aria_label={gettext("Filter by evidence status")}>
+            <:item
+              is_selected={@evidence_filter == :all}
+              phx-click="select_evidence_filter"
+              phx-value-filter="all"
+              type="button"
+            >
+              <span>{gettext("All")}</span>
+              <.counter>{evidence_counts.all}</.counter>
+            </:item>
+            <:item
+              is_selected={@evidence_filter == :needs_evidence}
+              phx-click="select_evidence_filter"
+              phx-value-filter="needs_evidence"
+              type="button"
+            >
+              <span>{gettext("Needs evidence")}</span>
+              <.counter>{evidence_counts.needs_evidence}</.counter>
+            </:item>
+            <:item
+              is_selected={@evidence_filter == :has_evidence}
+              phx-click="select_evidence_filter"
+              phx-value-filter="has_evidence"
+              type="button"
+            >
+              <span>{gettext("Evidence attached")}</span>
+              <.counter>{evidence_counts.has_evidence}</.counter>
+            </:item>
+          </.underline_nav>
         <% end %>
 
         <% # Apply filtering for in-scope controls %>
