@@ -159,10 +159,10 @@
                       <a
                         href={~p"/workspaces/#{@workspace.id}/evidence/#{evidence.id}"}
                         target="_blank"
-                        class="ml-1"
+                        class="ml-1 cursor-pointer"
                         title={evidence.name}
                       >
-                        <.label is_secondary>#{evidence.numeric_id}</.label>
+                        <.state_label is_small is_open>#{evidence.numeric_id}</.state_label>
                       </a>
                     <% end %>
                   <% end %>

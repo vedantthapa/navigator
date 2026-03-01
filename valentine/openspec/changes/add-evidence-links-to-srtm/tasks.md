@@ -21,9 +21,9 @@
 - [x] 3.3 Add for loop iterating over `sort_evidence_by_numeric_id(Map.get(@evidence_by_control, control.nist_id, []))`
 - [x] 3.4 Each evidence SHALL render as `<a>` tag with href using `~p` sigil path `/workspaces/#{@workspace.id}/evidence/#{evidence.id}`
 - [x] 3.5 Link SHALL have `target="_blank"` attribute to open in new tab
-- [x] 3.6 Link SHALL have `class="ml-1"` for 4px left margin spacing
+- [x] 3.6 Link SHALL have `class="ml-1 cursor-pointer"` for left margin spacing and pointer cursor
 - [x] 3.7 Link SHALL have `title={evidence.name}` for native browser tooltip
-- [x] 3.8 Link SHALL contain `<.label is_secondary>[#{evidence.numeric_id}]</.label>` component
+- [x] 3.8 Link SHALL contain `<.state_label is_small is_open>#{evidence.numeric_id}</.state_label>` component
 - [x] 3.9 Verify "Out of scope" and "Not allocated" tabs remain unchanged (no evidence labels)
 
 ## 4. Testing

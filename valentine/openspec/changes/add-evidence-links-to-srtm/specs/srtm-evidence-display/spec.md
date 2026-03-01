@@ -68,14 +68,14 @@ Evidence reference labels SHALL use consistent styling matching existing evidenc
 
 #### Scenario: Label appearance
 - **WHEN** evidence labels are displayed
-- **THEN** labels SHALL use secondary label styling (gray background)
+- **THEN** labels SHALL use small state label styling with open status (green)
 - **AND** labels SHALL have left margin spacing of 4px between each label
-- **AND** labels SHALL display in bracket notation format `[#N]`
+- **AND** labels SHALL display the numeric ID with hash prefix format `#N`
 
 #### Scenario: Visual consistency with evidence component
 - **WHEN** evidence labels are rendered
-- **THEN** styling SHALL match the numeric_id label in the evidence component
-- **AND** SHALL use PrimerLive `.label` component with `is_secondary` attribute
+- **THEN** styling SHALL use PrimerLive `.state_label` component
+- **AND** SHALL use `is_small` and `is_open` attributes for size and status styling
 
 ### Requirement: Evidence data updates
 Evidence data SHALL be refreshed when the SRTM page is manually refreshed or filters are updated.

@@ -77,23 +77,25 @@ end
 - LiveView helper function: Breaks separation of concerns
 - Inline in template: Not reusable, harder to test
 
-### 3. Styling: Secondary Labels with Tooltips
+### 3. Styling: Small State Labels with Tooltips
 
-**Decision:** Use `<.label is_secondary>` with `title` attribute for tooltips
+**Decision:** Use `<.state_label is_small is_open>` with `title` attribute for tooltips
 
 **Rationale:**
-- Matches existing evidence component pattern (line 19-21 in evidence_component.ex)
-- Secondary styling maintains visual hierarchy (control ID is primary)
+- State label with "open" status provides visual indication of available/active evidence
+- Small size maintains visual hierarchy (control ID is primary)
+- Green color is more visually distinct than gray secondary labels
 - Native `title` attribute provides tooltips without JavaScript
 - Consistent with Primer CSS design system
 
 **Visual Pattern:**
 ```
-AC-1 [#1] [#3] [#7]
-     ^^^^ Gray secondary labels, clickable
+AC-1 #1 #3 #7
+     ^^ ^^ ^^ Green state labels (small, open status), clickable
 ```
 
 **Alternatives Considered:**
+- Secondary labels: Less visually distinct, gray color less noticeable
 - Primary labels: Too prominent, competes with control ID
 - Plain text links: Less clear that they're interactive
 - Icon prefix: Adds visual clutter, not needed
