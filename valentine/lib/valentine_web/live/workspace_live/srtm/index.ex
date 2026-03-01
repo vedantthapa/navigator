@@ -24,7 +24,8 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
      |> assign(:nist_families, Composer.list_control_families())
      |> assign(:filters, filters)
      |> assign(:workspace, workspace)
-     |> assign(:evidence_by_control, Workspace.get_evidence_by_controls(workspace.evidence))}
+     |> assign(:evidence_by_control, Workspace.get_evidence_by_controls(workspace.evidence))
+     |> assign(:evidence_filter, :all)}
   end
 
   @impl true
@@ -40,7 +41,14 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
         :controls,
         map_controls(controls, workspace)
       )
+      |> assign(:evidence_filter, :all)
     }
+  end
+
+  @impl true
+  def handle_event("select_evidence_filter", %{"filter" => filter}, socket) do
+    evidence_filter = String.to_existing_atom(filter)
+    {:noreply, assign(socket, :evidence_filter, evidence_filter)}
   end
 
   @impl true
@@ -54,6 +62,7 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
       |> assign(:filters, filters)
       |> assign(:controls, map_controls(controls, workspace))
       |> assign(:evidence_by_control, Workspace.get_evidence_by_controls(workspace.evidence))
+      |> assign(:evidence_filter, :all)
     }
   end
 
@@ -177,5 +186,37 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
 
   defp sort_evidence_by_numeric_id(evidence_list) do
     Enum.sort_by(evidence_list, & &1.numeric_id)
+  end
+
+  defp filter_in_scope_by_evidence(in_scope_controls, _evidence_by_control, :all),
+    do: in_scope_controls
+
+  defp filter_in_scope_by_evidence(in_scope_controls, evidence_by_control, :needs_evidence) do
+    Map.filter(in_scope_controls, fn {nist_id, _items} ->
+      Map.get(evidence_by_control, nist_id, []) == []
+    end)
+  end
+
+  defp filter_in_scope_by_evidence(in_scope_controls, evidence_by_control, :has_evidence) do
+    Map.filter(in_scope_controls, fn {nist_id, _items} ->
+      Map.get(evidence_by_control, nist_id, []) != []
+    end)
+  end
+
+  defp count_controls_by_evidence(in_scope_controls, evidence_by_control) do
+    total = map_size(in_scope_controls)
+
+    has_evidence =
+      Enum.count(in_scope_controls, fn {nist_id, _items} ->
+        Map.get(evidence_by_control, nist_id, []) != []
+      end)
+
+    needs_evidence = total - has_evidence
+
+    %{
+      all: total,
+      has_evidence: has_evidence,
+      needs_evidence: needs_evidence
+    }
   end
 end
