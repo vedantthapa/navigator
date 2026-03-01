@@ -152,7 +152,22 @@
               </div>
             <% {_, [{control, related_items}]} -> %>
               <div class="p-3">
-                <div class="">{control.nist_id}</div>
+                <div class="">
+                  {control.nist_id}
+                  <%= if String.to_existing_atom(tab) == :in_scope do %>
+                    <%= for evidence <- sort_evidence_by_numeric_id(Map.get(@evidence_by_control, control.nist_id, [])) do %>
+                      <a
+                        href={~p"/workspaces/#{@workspace.id}/evidence/#{evidence.id}"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="ml-1 cursor-pointer"
+                        title={evidence.name}
+                      >
+                        <.state_label is_small is_open>#{evidence.numeric_id}</.state_label>
+                      </a>
+                    <% end %>
+                  <% end %>
+                </div>
                 <div class="">{control.name}</div>
                 <%= for item <- related_items do %>
                   <div class="mt-2">

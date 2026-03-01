@@ -23,7 +23,8 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
      |> assign(:controls, map_controls(controls, workspace))
      |> assign(:nist_families, Composer.list_control_families())
      |> assign(:filters, filters)
-     |> assign(:workspace, workspace)}
+     |> assign(:workspace, workspace)
+     |> assign(:evidence_by_control, Workspace.get_evidence_by_controls(workspace.evidence))}
   end
 
   @impl true
@@ -51,10 +52,8 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
       :noreply,
       socket
       |> assign(:filters, filters)
-      |> assign(
-        :controls,
-        map_controls(controls, workspace)
-      )
+      |> assign(:controls, map_controls(controls, workspace))
+      |> assign(:evidence_by_control, Workspace.get_evidence_by_controls(workspace.evidence))
     }
   end
 
@@ -136,7 +135,8 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
     Composer.get_workspace!(id,
       mitigations: [:assumptions, :threats],
       threats: [:assumptions, :mitigations],
-      assumptions: [:threats, :mitigations]
+      assumptions: [:threats, :mitigations],
+      evidence: []
     )
   end
 
@@ -173,5 +173,9 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
       :out_of_scope -> "info"
       :in_scope -> "success"
     end
+  end
+
+  defp sort_evidence_by_numeric_id(evidence_list) do
+    Enum.sort_by(evidence_list, & &1.numeric_id)
   end
 end
