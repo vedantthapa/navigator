@@ -11,7 +11,8 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.IndexTest do
       Valentine.Composer.get_workspace!(workspace.id,
         mitigations: [:assumptions, :threats],
         threats: [:assumptions, :mitigations],
-        assumptions: [:threats, :mitigations]
+        assumptions: [:threats, :mitigations],
+        evidence: []
       )
 
     socket = %Phoenix.LiveView.Socket{
