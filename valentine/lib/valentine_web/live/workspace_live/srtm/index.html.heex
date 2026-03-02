@@ -187,8 +187,10 @@
 
         <% # Show empty state if no results %>
         <%= if map_size(filtered_controls) == 0 do %>
-          <.blankslate>
-            <:heading>{gettext("No results found")}</:heading>
+          <.blankslate class="color-bg-default">
+            <:octicon name="shield-lock-24" />
+            <h3>{gettext("No results found")}</h3>
+            <p>{gettext("You may have filters set that are hiding controls")}</p>
           </.blankslate>
         <% else %>
           <%= for {_nist_id, items} <- Enum.sort(filtered_controls) do %>
