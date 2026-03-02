@@ -149,8 +149,7 @@
             <:item
               is_selected={@evidence_filter == :all}
               phx-click="select_evidence_filter"
-              phx-value-filter="all"
-              type="button"
+              phx-value-item="all"
             >
               <span>{gettext("All")}</span>
               <.counter>{evidence_counts.all}</.counter>
@@ -158,8 +157,7 @@
             <:item
               is_selected={@evidence_filter == :needs_evidence}
               phx-click="select_evidence_filter"
-              phx-value-filter="needs_evidence"
-              type="button"
+              phx-value-item="needs_evidence"
             >
               <span>{gettext("Needs evidence")}</span>
               <.counter>{evidence_counts.needs_evidence}</.counter>
@@ -167,8 +165,7 @@
             <:item
               is_selected={@evidence_filter == :has_evidence}
               phx-click="select_evidence_filter"
-              phx-value-filter="has_evidence"
-              type="button"
+              phx-value-item="has_evidence"
             >
               <span>{gettext("Evidence attached")}</span>
               <.counter>{evidence_counts.has_evidence}</.counter>

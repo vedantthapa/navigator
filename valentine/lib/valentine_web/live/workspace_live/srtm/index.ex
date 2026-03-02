@@ -45,8 +45,10 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
     }
   end
 
+  # Note: PrimerLive's underline_nav component requires phx-value-item,
+  # so the filter value arrives as "item" parameter instead of "filter"
   @impl true
-  def handle_event("select_evidence_filter", %{"filter" => filter}, socket) do
+  def handle_event("select_evidence_filter", %{"item" => filter}, socket) do
     evidence_filter = String.to_existing_atom(filter)
     {:noreply, assign(socket, :evidence_filter, evidence_filter)}
   end
