@@ -74,14 +74,15 @@ defmodule Valentine.Composer.WorkspaceTest do
 
       result = Workspace.get_evidence_by_controls(collection)
 
+      # Order is reversed due to prepending for O(n) performance
       assert result["AC-1"] == [
-               %Evidence{id: "1", numeric_id: 1, name: "Evidence 1", nist_controls: ["AC-1"]},
                %Evidence{
                  id: "3",
                  numeric_id: 3,
                  name: "Evidence 3",
                  nist_controls: ["AC-1", "SC-7"]
-               }
+               },
+               %Evidence{id: "1", numeric_id: 1, name: "Evidence 1", nist_controls: ["AC-1"]}
              ]
 
       assert result["AC-2"] == [

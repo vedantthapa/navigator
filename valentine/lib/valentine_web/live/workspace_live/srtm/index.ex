@@ -45,9 +45,11 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
     }
   end
 
+  # Note: PrimerLive's underline_nav component requires phx-value-item,
+  # so the filter value arrives as "item" parameter instead of "filter"
   @impl true
-  def handle_event("select_evidence_filter", %{"filter" => filter}, socket) do
-    evidence_filter = String.to_existing_atom(filter)
+  def handle_event("select_evidence_filter", %{"item" => filter}, socket) do
+    evidence_filter = parse_evidence_filter(filter)
     {:noreply, assign(socket, :evidence_filter, evidence_filter)}
   end
 
@@ -202,6 +204,11 @@ defmodule ValentineWeb.WorkspaceLive.SRTM.Index do
       Map.get(evidence_by_control, nist_id, []) != []
     end)
   end
+
+  defp parse_evidence_filter("all"), do: :all
+  defp parse_evidence_filter("needs_evidence"), do: :needs_evidence
+  defp parse_evidence_filter("has_evidence"), do: :has_evidence
+  defp parse_evidence_filter(_), do: :all
 
   defp count_controls_by_evidence(in_scope_controls, evidence_by_control) do
     total = map_size(in_scope_controls)
