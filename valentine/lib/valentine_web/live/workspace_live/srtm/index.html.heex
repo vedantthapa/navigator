@@ -135,16 +135,17 @@
       ]}
     >
       <:tab_content :let={tab}>
+        <% tab_atom = String.to_existing_atom(tab) %>
         <% # Calculate evidence counts for the in-scope tab %>
         <% evidence_counts =
-          if String.to_existing_atom(tab) == :in_scope do
+          if tab_atom == :in_scope do
             count_controls_by_evidence(@controls[:in_scope], @evidence_by_control)
           else
             %{all: 0, has_evidence: 0, needs_evidence: 0}
           end %>
 
         <% # Show evidence filter only in the "In scope" tab %>
-        <%= if String.to_existing_atom(tab) == :in_scope do %>
+        <%= if tab_atom == :in_scope do %>
           <.underline_nav aria_label={gettext("Filter by evidence status")}>
             <:item
               is_selected={@evidence_filter == :all}
@@ -175,14 +176,14 @@
 
         <% # Apply filtering for in-scope controls %>
         <% filtered_controls =
-          if String.to_existing_atom(tab) == :in_scope do
+          if tab_atom == :in_scope do
             filter_in_scope_by_evidence(
-              @controls[String.to_existing_atom(tab)],
+              @controls[tab_atom],
               @evidence_by_control,
               @evidence_filter
             )
           else
-            @controls[String.to_existing_atom(tab)]
+            @controls[tab_atom]
           end %>
 
         <% # Show empty state if no results %>
@@ -194,7 +195,7 @@
           </.blankslate>
         <% else %>
           <%= for {_nist_id, items} <- Enum.sort(filtered_controls) do %>
-            <%= case {String.to_existing_atom(tab), items} do %>
+            <%= case {tab_atom, items} do %>
               <% {:not_allocated, [control]} -> %>
                 <div class="p-3">
                   <div class="">{control.nist_id}</div>
@@ -212,7 +213,7 @@
                 <div class="p-3">
                   <div class="">
                     {control.nist_id}
-                    <%= if String.to_existing_atom(tab) == :in_scope do %>
+                    <%= if tab_atom == :in_scope do %>
                       <%= for evidence <- sort_evidence_by_numeric_id(Map.get(@evidence_by_control, control.nist_id, [])) do %>
                         <a
                           href={~p"/workspaces/#{@workspace.id}/evidence/#{evidence.id}"}
