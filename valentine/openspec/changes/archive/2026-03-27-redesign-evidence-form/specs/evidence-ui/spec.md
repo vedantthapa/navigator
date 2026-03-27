@@ -1,3 +1,73 @@
+# Evidence UI (Delta Spec)
+
+This delta spec modifies the existing evidence-ui capability to redesign the form layout and interaction patterns, making the evidence creation workflow simpler and more intuitive.
+
+## MODIFIED Requirements
+
+### Requirement: Evidence type inputs
+
+The system SHALL provide an optional attachment workflow where evidence type selection is not required upfront, allowing users to create description-only evidence or optionally add attachments.
+
+#### Scenario: Description-only default state
+- **WHEN** user opens the evidence creation form
+- **THEN** the system displays the form ready for description-only evidence
+- **AND** two card buttons SHALL offer optional attachment types
+
+#### Scenario: Link URL attachment
+- **WHEN** the user clicks "Link URL" card button
+- **THEN** the system displays a URL text input for blob store links
+- **AND** hides the card buttons
+- **AND** displays a "Clear" button to return to description-only state
+
+#### Scenario: Paste JSON attachment
+- **WHEN** the user clicks "Paste JSON" card button
+- **THEN** the system displays a textarea for JSON content
+- **AND** hides the card buttons
+- **AND** displays a "Clear" button to return to description-only state
+
+#### Scenario: Clear attachment returns to description-only
+- **WHEN** user clicks "Clear" button from an attachment state
+- **THEN** evidence_type resets to `:description_only`
+- **AND** attachment fields are cleared
+- **AND** card buttons are displayed again
+
+### Requirement: Markdown description editing
+
+The evidence description field SHALL be required and provide a Write/Preview tab interface for markdown editing.
+
+#### Scenario: Description is required
+- **WHEN** user is on the evidence create/edit page
+- **THEN** description field SHALL display label "Description *"
+- **AND** description SHALL be required for form submission
+
+#### Scenario: Write markdown in description
+- **WHEN** user interacts with description field
+- **THEN** the description field displays Write and Preview tabs for markdown editing
+
+#### Scenario: Preview markdown rendering
+- **WHEN** user enters markdown text and switches to Preview tab
+- **THEN** the system renders the markdown as formatted HTML
+
+#### Scenario: Save markdown description
+- **WHEN** user enters markdown in the description field and saves
+- **THEN** the markdown text is stored and the evidence saves successfully
+
+### Requirement: Validation feedback
+
+The system SHALL surface validation errors for required evidence fields including name, description, and type-specific attachment content in the create and edit views.
+
+#### Scenario: Missing required fields
+- **WHEN** a user attempts to save evidence without name or description
+- **THEN** the system displays validation errors on the form
+
+#### Scenario: Missing type-specific content
+- **WHEN** user has selected an attachment type but not provided the required content
+- **THEN** the system displays appropriate validation error
+
+#### Scenario: Validation errors use consistent terminology
+- **WHEN** user submits invalid evidence data
+- **THEN** validation error messages SHALL use standardized evidence type names ("Description Only", "JSON Content", "File Link") rather than technical values
+
 ## ADDED Requirements
 
 ### Requirement: Name field is prominently displayed as primary input
@@ -52,20 +122,6 @@ The form SHALL NOT display a full-width divider between the name field and subse
 - **WHEN** form is rendered
 - **THEN** no divider element SHALL appear after name field
 - **AND** description section SHALL follow directly with standard spacing
-
-### Requirement: Description field is required with label
-
-The description field SHALL be marked as required with label "Description *".
-
-#### Scenario: Description field rendering
-- **WHEN** form is displayed
-- **THEN** description SHALL have label "Description *"
-- **AND** label SHALL indicate field is required
-
-#### Scenario: Description tab navigation unchanged
-- **WHEN** description field is rendered
-- **THEN** TabNavComponent with Write/Preview tabs SHALL be present
-- **AND** functionality SHALL remain the same as current implementation
 
 ### Requirement: Optional attachment section with conditional UI
 

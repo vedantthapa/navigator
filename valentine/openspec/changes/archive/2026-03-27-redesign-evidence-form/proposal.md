@@ -18,11 +18,15 @@ Improve the evidence creation UX by making description-only evidence the default
 
 - `evidence-type-description-only`: Support for description-only evidence type that doesn't require file attachments or links. Includes backend schema changes, validation logic, and default behavior for new evidence.
 
-- `evidence-form-ui`: New evidence form layout and interaction patterns including name field styling, optional evidence attachment section with compact card buttons, two-column layout, and tab navigation for description field.
-
 ### Modified Capabilities
 
-<!-- No existing specs to modify -->
+- `evidence-ui`: Updated evidence form layout and interaction patterns including:
+  - Two-column layout with sidebar positioned at top
+  - Optional attachment workflow with compact card button selection
+  - Description field now required for all evidence types
+  - Cleaner visual hierarchy with reduced spacing and borderless name input
+  - Evidence number display for existing records
+  - New LiveView event handlers for evidence type state management
 
 ## Impact
 
