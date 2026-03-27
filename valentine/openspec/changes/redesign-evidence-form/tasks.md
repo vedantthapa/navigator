@@ -60,26 +60,26 @@
 
 ## 9. Testing: LiveView Event Handlers
 
-- [ ] 9.1 Test set_evidence_type event changes evidence type and updates form state
-- [ ] 9.2 Test clear_evidence_type event resets to description_only and clears attachment fields
-- [ ] 9.3 Test new evidence form initializes with description_only type
-- [ ] 9.4 Test evidence can transition between all three types
+- [x] 9.1 Test set_evidence_type event changes evidence type and updates form state
+- [x] 9.2 Test clear_evidence_type event resets to description_only and clears attachment fields
+- [x] 9.3 Test new evidence form initializes with description_only type
+- [x] 9.4 Test evidence can transition between all three types
 
 ## 10. Testing: Evidence Form Integration
 
-- [ ] 10.1 Test creating new description-only evidence through the form succeeds
-- [ ] 10.2 Test creating evidence with URL attachment through the form succeeds
-- [ ] 10.3 Test creating evidence with JSON attachment through the form succeeds
-- [ ] 10.4 Test editing existing evidence preserves evidence type and data
-- [ ] 10.5 Test switching evidence type clears previous attachment data
-- [ ] 10.6 Test evidence number displays when editing existing evidence
-- [ ] 10.7 Test form validates required fields (name, description)
+- [x] 10.1 Test creating new description-only evidence through the form succeeds
+- [x] 10.2 Test creating evidence with URL attachment through the form succeeds
+- [x] 10.3 Test creating evidence with JSON attachment through the form succeeds
+- [x] 10.4 Test editing existing evidence preserves evidence type and data
+- [x] 10.5 Test switching evidence type clears previous attachment data
+- [x] 10.6 Test evidence number displays when editing existing evidence
+- [x] 10.7 Test form validates required fields (name, description)
 
 ## 11. Final Verification
 
-- [ ] 11.1 Run full test suite and ensure all tests pass
-- [ ] 11.2 Manually test creating new description-only evidence
-- [ ] 11.3 Manually test editing existing evidence of all types
-- [ ] 11.4 Manually test state transitions between evidence types
-- [ ] 11.5 Verify backward compatibility with existing evidence records
-- [ ] 11.6 Verify form styling matches design reference
+- [x] 11.1 Run full test suite and ensure all tests pass
+- [x] 11.2 Manually test creating new description-only evidence
+- [x] 11.3 Manually test editing existing evidence of all types
+- [x] 11.4 Manually test state transitions between evidence types
+- [x] 11.5 Verify backward compatibility with existing evidence records
+- [x] 11.6 Verify form styling matches design reference

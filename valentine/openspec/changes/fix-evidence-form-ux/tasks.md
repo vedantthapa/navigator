@@ -18,8 +18,8 @@
 
 ## 4. Manual Testing
 
-- [ ] 4.1 Test creating new evidence - verify JSON content field appears by default
-- [ ] 4.2 Test switching evidence type - verify Blob store URL field appears when selected
-- [ ] 4.3 Verify all form fields are aligned and full-width
-- [ ] 4.4 Verify label/heading styling is consistent across all sections
-- [ ] 4.5 Test editing existing evidence - verify form displays correctly with existing data
+- [x] 4.1 Test creating new evidence - verify JSON content field appears by default
+- [x] 4.2 Test switching evidence type - verify Blob store URL field appears when selected
+- [x] 4.3 Verify all form fields are aligned and full-width
+- [x] 4.4 Verify label/heading styling is consistent across all sections
+- [x] 4.5 Test editing existing evidence - verify form displays correctly with existing data

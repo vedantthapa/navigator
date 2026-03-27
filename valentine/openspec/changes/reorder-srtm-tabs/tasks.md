@@ -16,24 +16,24 @@
 
 ## 3. Visual QA Testing
 
-- [ ] 3.1 Start the Phoenix server and navigate to an SRTM view page
-- [ ] 3.2 Verify percentage boxes appear in correct order on desktop: In scope (left-1st), Out of scope (left-2nd), Not allocated (right)
-- [ ] 3.3 Verify In scope and Out of scope boxes appear as unified visual block with proper borders
-- [ ] 3.4 Verify Not allocated box has all borders and rounded corners
-- [ ] 3.5 Resize browser to mobile viewport (<768px) and verify boxes stack vertically in correct order
-- [ ] 3.6 Verify tabs appear in correct order: In scope, Out of scope, Not allocated
+- [x] 3.1 Start the Phoenix server and navigate to an SRTM view page
+- [x] 3.2 Verify percentage boxes appear in correct order on desktop: In scope (left-1st), Out of scope (left-2nd), Not allocated (right)
+- [x] 3.3 Verify In scope and Out of scope boxes appear as unified visual block with proper borders
+- [x] 3.4 Verify Not allocated box has all borders and rounded corners
+- [x] 3.5 Resize browser to mobile viewport (<768px) and verify boxes stack vertically in correct order
+- [x] 3.6 Verify tabs appear in correct order: In scope, Out of scope, Not allocated
 
 ## 4. Functional Testing
 
-- [ ] 4.1 Click each tab and verify the correct control list displays
-- [ ] 4.2 In the In scope tab, verify evidence filtering works (All, Needs evidence, Evidence attached)
-- [ ] 4.3 Verify evidence counts display correctly for each filter option
-- [ ] 4.4 Expand control details using "More information" and verify all metadata displays correctly
-- [ ] 4.5 Verify evidence badges display correctly next to control IDs in the In scope tab
-- [ ] 4.6 Test "Export to Excel" functionality and verify export includes all controls correctly
+- [x] 4.1 Click each tab and verify the correct control list displays
+- [x] 4.2 In the In scope tab, verify evidence filtering works (All, Needs evidence, Evidence attached)
+- [x] 4.3 Verify evidence counts display correctly for each filter option
+- [x] 4.4 Expand control details using "More information" and verify all metadata displays correctly
+- [x] 4.5 Verify evidence badges display correctly next to control IDs in the In scope tab
+- [x] 4.6 Test "Export to Excel" functionality and verify export includes all controls correctly
 
 ## 5. Cross-browser Testing
 
-- [ ] 5.1 Test layout in Chrome/Edge (desktop and mobile viewports)
-- [ ] 5.2 Test layout in Firefox (desktop and mobile viewports)
-- [ ] 5.3 Test layout in Safari (desktop and mobile viewports)
+- [x] 5.1 Test layout in Chrome/Edge (desktop and mobile viewports)
+- [x] 5.2 Test layout in Firefox (desktop and mobile viewports)
+- [x] 5.3 Test layout in Safari (desktop and mobile viewports)

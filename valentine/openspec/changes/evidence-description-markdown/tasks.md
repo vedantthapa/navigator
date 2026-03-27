@@ -29,37 +29,37 @@
 
 ## 4. Manual Testing
 
-- [ ] 4.1 Start the development server and navigate to evidence create page
-- [ ] 4.2 Verify the main form contains: Name, Evidence type, and conditional JSON/Blob fields
-- [ ] 4.3 Verify the Description box appears as a separate section below the main form
-- [ ] 4.4 Verify Write and Preview tabs are visible in the description box
-- [ ] 4.5 Type markdown text in Write tab (e.g., "**Bold** and *italic*")
-- [ ] 4.6 Switch to Preview tab and verify markdown is rendered as formatted HTML
-- [ ] 4.7 Switch back to Write tab and verify text is preserved
-- [ ] 4.8 Fill in required fields (Name, Evidence type) and save the evidence
-- [ ] 4.9 Verify the evidence saves successfully and redirects to the evidence list
-- [ ] 4.10 Verify the description appears with rendered markdown in the evidence list
-- [ ] 4.11 Click to edit the evidence and verify the markdown loads in the Write tab
-- [ ] 4.12 Test with empty description - verify it saves and displays correctly
-- [ ] 4.13 Test editing an existing evidence with plain text description - verify it loads and displays correctly
-- [ ] 4.14 Test with special characters (e.g., `<script>alert('xss')</script>`) and verify they are escaped
+- [x] 4.1 Start the development server and navigate to evidence create page
+- [x] 4.2 Verify the main form contains: Name, Evidence type, and conditional JSON/Blob fields
+- [x] 4.3 Verify the Description box appears as a separate section below the main form
+- [x] 4.4 Verify Write and Preview tabs are visible in the description box
+- [x] 4.5 Type markdown text in Write tab (e.g., "**Bold** and *italic*")
+- [x] 4.6 Switch to Preview tab and verify markdown is rendered as formatted HTML
+- [x] 4.7 Switch back to Write tab and verify text is preserved
+- [x] 4.8 Fill in required fields (Name, Evidence type) and save the evidence
+- [x] 4.9 Verify the evidence saves successfully and redirects to the evidence list
+- [x] 4.10 Verify the description appears with rendered markdown in the evidence list
+- [x] 4.11 Click to edit the evidence and verify the markdown loads in the Write tab
+- [x] 4.12 Test with empty description - verify it saves and displays correctly
+- [x] 4.13 Test editing an existing evidence with plain text description - verify it loads and displays correctly
+- [x] 4.14 Test with special characters (e.g., `<script>alert('xss')</script>`) and verify they are escaped
 
 ## 5. Edge Case Testing
 
-- [ ] 5.1 Test creating evidence with very long markdown content (1000+ characters)
-- [ ] 5.2 Test markdown with all common elements: headings, bold, italic, lists, links, code blocks
-- [ ] 5.3 Test with markdown special characters in plain text (e.g., "Price: $5 * 2 = $10")
-- [ ] 5.4 Test rapid switching between Write/Preview tabs
-- [ ] 5.5 Test typing in Write tab and verifying live preview updates when switching tabs
-- [ ] 5.6 Verify both forms (main + description) trigger updates independently
-- [ ] 5.7 Test browser back button behavior after saving evidence
-- [ ] 5.8 Test with browser dev tools - verify no nested form warnings or errors
+- [x] 5.1 Test creating evidence with very long markdown content (1000+ characters)
+- [x] 5.2 Test markdown with all common elements: headings, bold, italic, lists, links, code blocks
+- [x] 5.3 Test with markdown special characters in plain text (e.g., "Price: $5 * 2 = $10")
+- [x] 5.4 Test rapid switching between Write/Preview tabs
+- [x] 5.5 Test typing in Write tab and verifying live preview updates when switching tabs
+- [x] 5.6 Verify both forms (main + description) trigger updates independently
+- [x] 5.7 Test browser back button behavior after saving evidence
+- [x] 5.8 Test with browser dev tools - verify no nested form warnings or errors
 
 ## 6. Verification
 
-- [ ] 6.1 Verify no console errors appear in browser dev tools
+- [x] 6.1 Verify no console errors appear in browser dev tools
 - [x] 6.2 Verify no Elixir compilation warnings
-- [ ] 6.3 Verify the layout matches the threats comments pattern visually
-- [ ] 6.4 Verify the description box appears in col-8 (left column) with proper spacing
-- [ ] 6.5 Verify the NIST Controls and Tags sidebar (col-3) remains unchanged and functional
-- [ ] 6.6 Compare with threats page comments section to ensure visual consistency
+- [x] 6.3 Verify the layout matches the threats comments pattern visually
+- [x] 6.4 Verify the description box appears in col-8 (left column) with proper spacing
+- [x] 6.5 Verify the NIST Controls and Tags sidebar (col-3) remains unchanged and functional
+- [x] 6.6 Compare with threats page comments section to ensure visual consistency
